@@ -1,0 +1,6 @@
+Các thư viện nodeJS sẽ sử dụng
+ExpressJS: đảm nhiệm phần routing,CRUD
+Mongoose: 1 thư viện của nodeJS giúp tương tác với mongo dễ hơn
+Multer: thư viện dùng để upload ảnh
+JasonWebToken: dùng để lấy token (sẽ được thay đổi thành firebase sau)
+cors: thêm được permission cho ứng dụng của ta để truy cập backend
