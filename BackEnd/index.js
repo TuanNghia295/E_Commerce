@@ -142,7 +142,7 @@ app.post("/signUp", async (req, res, next) => {
   // });
   res.json({
     success: true,
-    token
+    token,
   });
 });
 
@@ -169,6 +169,88 @@ app.post("/login", async (req, res) => {
   }
   return res.json({ success: false, error: "Wrong Email ID" });
 });
+
+// creating endpoint for newCollections data
+app.get("/newcollections", async (req, res) => {
+  let products = await Product.find({});
+  let newCollections = products.slice(1).slice(-8);
+  console.log("newCollections", newCollections);
+  res.send(newCollections);
+});
+
+// creating endpoint for popular in women section
+app.get("/popularinwoman", async (req, res) => {
+  let products = await Product.find({ category: "women" });
+  let popular_in_women = products.slice(0, 4);
+  console.log("women fetched", popular_in_women);
+  res.send(popular_in_women);
+});
+
+// creating middleware to fetch user id
+const fetchUser = async (req, res, next) => {
+  const token = req.header("authToken");
+  if (!token) {
+    res.status(401).send({ errors: "Please authenicate using a valid token" });
+  } else {
+    try {
+      const data = jwt.verify(token, "secretKeyCuaNghia");
+      req.user = data.user;
+      next();
+    } catch (error) {
+      res
+        .status(401)
+        .send({ errors: "Please authenicate using a valid token  " });
+    }
+  }
+};
+
+// creating endpoints for addings products in data
+app.post("/addtocart", fetchUser, async (req, res) => {
+  console.log("added",req.body.itemID);
+
+  let userData = await Users.findOne({
+    _id: req.user.id,
+  });
+
+  userData.cartData[req.body.itemID] += 1;
+  await Users.findOneAndUpdate(
+    {
+      _id: req.user.id,
+    },
+    {
+      cartData: userData.cartData,
+    }
+  );
+  res.send("Added");
+});
+
+// creating endpoints to remove products from cartdata
+app.post("/removefromcart", fetchUser, async (req, res) => {
+  console.log("remove",req.body.itemID);
+  let userData = await Users.findOne({
+    _id: req.user.id,
+  });
+  if (userData.cartData[req.body.itemID] > 0) {
+    userData.cartData[req.body.itemID] -= 1;
+  }
+  await Users.findOneAndUpdate(
+    {
+      _id: req.user.id,
+    },
+    {
+      cartData: userData.cartData,
+    }
+  );
+  res.send("Removed");
+});
+
+// creating get cartData
+app.post("/getcart",fetchUser, async (req, res) => {
+  console.log("Get cart");
+  let userData = await Users.findOne({_id:req.user.id})
+  res.json(userData.cartData);
+})
+
 
 app.listen(port, (error) => {
   if (!error) {

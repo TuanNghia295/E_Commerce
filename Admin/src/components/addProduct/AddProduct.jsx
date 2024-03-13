@@ -105,7 +105,7 @@ const AddProduct = () => {
           className="addProduct-selector"
         >
           <option value="women">Women</option>
-          <option value="man">Man</option>
+          <option value="men">Man</option>
           <option value="kid">Kid</option>
         </select>
       </div>

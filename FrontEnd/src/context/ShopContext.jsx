@@ -12,20 +12,60 @@ const getDefaultCart = () => {
 
 const ShopContextProvider = (props) => {
   const [cartItems, setCartItems] = useState(getDefaultCart());
-  const [all_product,setAllProduct] = useState([])
+  const [all_product, setAllProduct] = useState([]);
 
-  useEffect(()=>{
+  useEffect(() => {
     fetch("http://localhost:2905/allProducts")
-    .then(response => response.json())
-    .then((data) => setAllProduct(data))
-  },[])
-  
+      .then((response) => response.json())
+      .then((data) => setAllProduct(data));
+
+    if (localStorage.getItem("authToken")) {
+      fetch("http://localhost:2905/getcart", {
+        method: "POST",
+        headers: {
+          Accept: "application/form-data",
+          authToken: `${localStorage.getItem("authToken")}`,
+          "Content-Type": "application/json",
+        },
+        body: "",
+      })
+        .then((response) => response.json())
+        .then((data) => setCartItems(data));
+    }
+  }, []);
+
   const addToCart = (itemID) => {
     setCartItems((prev) => ({ ...prev, [itemID]: prev[itemID] + 1 }));
+    if (localStorage.getItem("authToken")) {
+      fetch("http://localhost:2905/addtocart", {
+        method: "POST",
+        headers: {
+          Accept: "application/data",
+          authToken: `${localStorage.getItem("authToken")}`,
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify({ itemID: itemID }),
+      })
+        .then((response) => response.json())
+        .then((data) => console.log(data));
+    }
   };
 
   const removeFromCart = (itemID) => {
     setCartItems((prev) => ({ ...prev, [itemID]: prev[itemID] - 1 }));
+    if (localStorage.getItem("authToken")) {
+      fetch("http://localhost:2905/removefromcart", {
+        method: "POST",
+        headers: {
+          Accept: "application/data",
+          authToken: `${localStorage.getItem("authToken")}`,
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify({ itemID: itemID }),
+      })
+        .then((response) => response.json())
+        .then((data) => console.log(data));
+    }
   };
 
   const getTotalCartAmount = () => {
@@ -49,7 +89,7 @@ const ShopContextProvider = (props) => {
       if (cartItems[item] > 0) {
         // nếu như giá trị của carItems lớn hơn 0
         // Lấy giá trị đó cộng lại
-       totalItem += cartItems[item];
+        totalItem += cartItems[item];
       }
     }
     return totalItem;

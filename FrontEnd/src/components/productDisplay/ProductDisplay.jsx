@@ -7,7 +7,7 @@ import { ShopContext } from "../../context/ShopContext";
 
 const cx = classNames.bind(styles);
 const ProductDisplay = ({ product }) => {
-  const {addToCart,cartItems} = useContext(ShopContext)
+  const {addToCart} = useContext(ShopContext)
   return (
     <div className={cx("productDisplay")}>
       <div className={cx("productDisplay-left")}>

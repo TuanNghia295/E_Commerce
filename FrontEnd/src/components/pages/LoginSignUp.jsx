@@ -24,7 +24,6 @@ const LoginSignUp = () => {
   }, [formData]);
 
   const login = async () => {
-    console.log("login", formData);
     let responseData;
     await fetch("http://localhost:2905/login", {
       method: "POST",

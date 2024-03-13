@@ -24,7 +24,7 @@ const CartItems = () => {
             return (
               <>
                 <hr />
-                <div className={cx("cartItems-format",{"cartItems-format-main":true})} key={index}>
+                <div  className={cx("cartItems-format",{"cartItems-format-main":true})} key={index}>
                   <img
                     src={item.image}
                     alt=""
