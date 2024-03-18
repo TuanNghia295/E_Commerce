@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 const cx = classNames.bind(styles);
 const LoginSignUp = () => {
+
   const [state, setState] = useState("Login");
   const [formData, setFormData] = useState({
     username: "",
@@ -19,9 +20,7 @@ const LoginSignUp = () => {
     formDataCopy[e.target.name] = e.target.value;
     setFormData(formDataCopy);
   };
-  useEffect(() => {
-    console.log(formData);
-  }, [formData]);
+ 
 
   const login = async () => {
     let responseData;
@@ -35,13 +34,12 @@ const LoginSignUp = () => {
     })
       .then((repsonse) => repsonse.json())
       .then((data) => (responseData = data));
-      if(responseData.success){
-        localStorage.setItem("authToken", responseData.token)
-        window.location.replace("/")
-      }
-      else{
-        alert(responseData.error)
-      }
+    if (responseData.success) {
+      localStorage.setItem("authToken", responseData.token);
+      window.location.replace("/");
+    } else {
+      alert(responseData.error);
+    }
   };
 
   const signUp = async () => {

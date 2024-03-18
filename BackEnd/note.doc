@@ -4,3 +4,11 @@ Mongoose: 1 thư viện của nodeJS giúp tương tác với mongo dễ hơn
 Multer: thư viện dùng để upload ảnh
 JasonWebToken: dùng để lấy token (sẽ được thay đổi thành firebase sau)
 cors: thêm được permission cho ứng dụng của ta để truy cập backend
+
+
+Các bước sử dụng firebase ở phía backEnd
+tóm tắt:
+- phải cài Firebase Admin SDK
+- Tạo Tệp Service Account Key
+- Kết nối và Thao tác với Firebase Realtime Database
+
