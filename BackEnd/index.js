@@ -8,6 +8,8 @@ const cors = require("cors");
 const Product = require("./schema/product");
 const Users = require("./schema/user");
 const db = require("./database_connection/index");
+const fb = require("./database_connection/firebase");
+const session = require("express-session");
 
 app.use(express.json());
 app.use(cors());
@@ -97,78 +99,140 @@ app.get("/allProducts", async (req, res, next) => {
 
 // Creating endpoint for registering the users
 app.post("/signUp", async (req, res, next) => {
-  let check = await Users.findOne({ email: req.body.email });
-  if (check) {
-    return res.status(400).json({
-      success: false,
-      error: "Existing user found with same email address",
-    });
+  const { email } = req.body;
+  try {
+    // check email exits in database or not
+    // orderByChild: yêu cầu giá trị cụ thể được định nghĩa bằng key email hoặc đường dẫn lồng nhau
+    const snapshot = await fb
+      .ref("users")
+      .orderByChild("email")
+      .equalTo(email)
+      .once("value");
+    if (snapshot.exists()) {
+      return res.status(400).json({
+        error: "Email has been used",
+      });
+    } else {
+      const userRef = fb.ref("users");
+      userRef
+        .push({
+          email: req.body.email,
+          name: req.body.username,
+          password: req.body.password,
+        })
+        .then((snapshot) => {
+          const key = snapshot.key;
+          return res.json({
+            key,
+            success: true,
+          });
+        });
+    }
+  } catch (error) {
+    console.log("error from server when trying to sign up", error);
   }
-  let cart = {};
-  // tạo cart rỗng có  key và value có thứ tự từ 1 đến 300 có giá trị bằng 0
-  for (let index = 1; index <= 300; index++) {
-    cart[index] = 0;
-  }
-
-  const user = new Users({
-    name: req.body.name,
-    email: req.body.email,
-    password: req.body.password,
-    cartData: cart,
-  });
-
-  await user.save();
-
-  const data = {
-    user: {
-      id: user.id,
-    },
-  };
-
-  //  sử dụng jwt để tạo token
-  // lấy data có dữ liệu là ID để đăng ký
-  const token = jwt.sign(data, "secretKeyCuaNghia");
-  //  // tạo nameCookie
-  // const cookieName = "AuthToken";
-  // const valueToken = token;
-  // const timeExpiresIn = 60 * 60 * 60 * 100 * 24;
-  // const cookiee = res.cookie(cookieName, valueToken, {
-  //   httpOnly: true,
-  //   secure: true,
-  //   sameSite:"strict",
-  //   maxTime: timeExpiresIn,
-  //   success: true,
-  //   token,
-  // });
-  res.json({
-    success: true,
-    token,
-  });
 });
 
 // creating for user login
 app.post("/login", async (req, res) => {
-  let user = await Users.findOne({ email: req.body.email });
-  if (user) {
-    const passCompare = req.body.password === user.password;
-    if (passCompare) {
-      const data = {
-        user: {
-          id: user.id,
-        },
-      };
+  const { email, password } = req.body;
+  const userRef = fb.ref("users");
 
-      const token = jwt.sign(data, "secretKeyCuaNghia", {});
-      return res.json({
-        success: true,
-        token,
+  userRef.once("value", (snapshot) => {
+    if (snapshot.exists()) {
+      const users = snapshot.val();
+      console.log("users", users);
+      // Kiểm tra xem có người dùng nào có email và password khớp với yêu cầu đăng nhập hay không
+      const userKeys = Object.keys(users);
+      const foundUserKey = userKeys.find((userKey) => {
+        const userData = users[userKey];
+        return userData.email === email && userData.password === password;
       });
+
+      if (foundUserKey) {
+        const foundUser = users[foundUserKey];
+        console.log("user found", foundUser);
+
+        // login success
+        res.status(200).json({ success: true, message: "Login Successfully" });
+      } else {
+        console.log("Không tìm thấy người dùng");
+        res
+          .status(401)
+          .json({ success: false, error: "Email or password invalid" });
+      }
     } else {
-      return res.json({ success: false, error: "Wrong Password" });
+      console.log("No data available");
+      res.status(404).json({ success: false, error: "No data available" });
     }
-  }
-  return res.json({ success: false, error: "Wrong Email ID" });
+  });
 });
+
+// creating for sign in, sign up by Facebook, Google
+// session config to use passport
+app.use(
+  session({
+    secret: "secretKeyCuaNghia",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+
+const passport = require("passport");
+const FacebookStrategy = require("passport-facebook").Strategy;
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+
+// Middleware của Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Cấu hình serialize và deserialize user
+passport.serializeUser(function (user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function (obj, done) {
+  done(null, obj);
+});
+
+require('dotenv').config();
+
+const googleClientId = process.env.CLIENT_ID;
+const googleClientSecret = process.env.CLIENT_SECRET;
+
+// Cấu hình Passport
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: googleClientId,
+      clientSecret: googleClientSecret,
+      callbackURL: "http://localhost:2905/auth/google/callback",
+    },
+    function (accessToken, refreshToken, profile, done) {
+      console.log("accessToken: " + accessToken);
+      console.log("refreshToken" + refreshToken);
+      console.log("profile" + profile);
+      return done(null, profile);
+    }
+  )
+);
+
+// Endpoint đăng nhập bằng tài khoản Google
+app.get(
+  "/auth/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: "/login",
+  }),
+  function (req, res) {
+    // Xử lý sau khi đăng nhập thành công
+    res.send(`Hello ${req.user.displayName}!`)
+  }
+);
 
 // creating endpoint for newCollections data
 app.get("/newcollections", async (req, res) => {
@@ -182,7 +246,7 @@ app.get("/newcollections", async (req, res) => {
 app.get("/popularinwoman", async (req, res) => {
   let products = await Product.find({ category: "women" });
   let popular_in_women = products.slice(0, 4);
-  console.log("women fetched", popular_in_women);
+  // console.log("women fetched", popular_in_women);
   res.send(popular_in_women);
 });
 
@@ -206,7 +270,7 @@ const fetchUser = async (req, res, next) => {
 
 // creating endpoints for addings products in data
 app.post("/addtocart", fetchUser, async (req, res) => {
-  console.log("added",req.body.itemID);
+  console.log("added", req.body.itemID);
 
   let userData = await Users.findOne({
     _id: req.user.id,
@@ -226,7 +290,7 @@ app.post("/addtocart", fetchUser, async (req, res) => {
 
 // creating endpoints to remove products from cartdata
 app.post("/removefromcart", fetchUser, async (req, res) => {
-  console.log("remove",req.body.itemID);
+  console.log("remove", req.body.itemID);
   let userData = await Users.findOne({
     _id: req.user.id,
   });
@@ -245,12 +309,11 @@ app.post("/removefromcart", fetchUser, async (req, res) => {
 });
 
 // creating get cartData
-app.post("/getcart",fetchUser, async (req, res) => {
+app.post("/getcart", fetchUser, async (req, res) => {
   console.log("Get cart");
-  let userData = await Users.findOne({_id:req.user.id})
+  let userData = await Users.findOne({ _id: req.user.id });
   res.json(userData.cartData);
-})
-
+});
 
 app.listen(port, (error) => {
   if (!error) {
