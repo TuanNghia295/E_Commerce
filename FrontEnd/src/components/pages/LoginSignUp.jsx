@@ -1,10 +1,9 @@
 import classNames from "classnames/bind";
 import styles from "./scss/loginSignUp.module.scss";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const cx = classNames.bind(styles);
 const LoginSignUp = () => {
-
   const [state, setState] = useState("Login");
   const [formData, setFormData] = useState({
     username: "",
@@ -20,7 +19,6 @@ const LoginSignUp = () => {
     formDataCopy[e.target.name] = e.target.value;
     setFormData(formDataCopy);
   };
- 
 
   const login = async () => {
     let responseData;
@@ -40,6 +38,7 @@ const LoginSignUp = () => {
     } else {
       alert(responseData.error);
     }
+    console.log(responseData);
   };
 
   const signUp = async () => {
@@ -62,6 +61,10 @@ const LoginSignUp = () => {
     } else {
       alert(responseData.error);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    window.location.href = "http://localhost:2905/auth/google"; // Chuyển hướng đến route xác thực của Google khi nhấn nút
   };
 
   return (
@@ -94,6 +97,9 @@ const LoginSignUp = () => {
             name="password"
             value={formData.password}
           />
+        </div>
+        <div className={cx("loginSingup-fields")}>
+          <button onClick={handleGoogleLogin}>Login with Google</button>
         </div>
         <button
           onClick={() => {
