@@ -1,0 +1,41 @@
+# Bỏ qua tất cả các tệp có phần mở rộng .log
+*.log
+
+# Bỏ qua tất cả các thư mục có tên node_modules
+node_modules/
+
+# Bỏ qua các tệp cụ thể
+config.ini
+secrets.txt
+
+# Bỏ qua tất cả các tệp trong thư mục temp
+temp/*
+
+# Bỏ qua tất cả các tệp .tmp nhưng không bỏ qua temp.log.tmp
+*.tmp
+!temp.log.tmp
+
+# Bỏ qua tất cả các tệp .env (chứa biến môi trường)
+.env
+
+# Bỏ qua tất cả các tệp sau khi chuyển đổi thành nhóm
+.vscode/
+.idea/
+*.pyc
+
+# Bỏ qua tất cả các tệp sau khi biên dịch
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Bỏ qua các thư mục và tệp được tạo ra bởi cấu trúc môi trường Java
+bin/
+target/
+*.class
+
+# Bỏ qua các tệp ghi đè trong hệ điều hành Unix
+.DS_Store
+Thumbs.db
