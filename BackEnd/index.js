@@ -10,7 +10,6 @@ const Users = require("./schema/user");
 const db = require("./database_connection/index");
 const fb = require("./database_connection/firebase");
 const session = require("express-session");
-const admin = require("firebase-admin");
 
 app.use(express.json());
 app.use(cors());
@@ -120,12 +119,22 @@ app.post("/signUp", async (req, res, next) => {
           email: req.body.email,
           name: req.body.username,
           password: req.body.password,
+          cartData: Array.from({ length: 300 }, (_, index) => ({
+            id: index + 1 /* các thuộc tính khác của object */,
+          })),
         })
+
         .then((snapshot) => {
           const key = snapshot.key;
           return res.json({
             key,
             success: true,
+            email: req.body.email,
+            name: req.body.username,
+            password: req.body.password,
+            cartData: Array.from({ length: 300 }, (_, index) => ({
+              id: index + 1 /* các thuộc tính khác của object */,
+            })),
           });
         });
     }
@@ -240,7 +249,7 @@ app.get(
 app.get("/newcollections", async (req, res) => {
   let products = await Product.find({});
   let newCollections = products.slice(1).slice(-8);
-  console.log("newCollections", newCollections);
+  // console.log("newCollections", newCollections);
   res.send(newCollections);
 });
 
@@ -253,19 +262,36 @@ app.get("/popularinwoman", async (req, res) => {
 });
 
 // creating middleware to fetch user id
+// const fetchUser = async (req, res, next) => {
+//   const token = req.header("authToken");
+//   if (!token) {
+//     res.status(401).send({ errors: "Please authenicate using a valid token" });
+//   } else {
+//     try {
+//       const data = jwt.verify(token, "secretKeyCuaNghia");
+//       req.user = data.user;
+//       next();
+//     } catch (error) {
+//       res
+//         .status(401)
+//         .send({ errors: "Please authenicate using a valid token  " });
+//     }
+//   }
+// };
+
 const fetchUser = async (req, res, next) => {
-  const token = req.header("authToken");
+  const token = req.header("Authorization");
   if (!token) {
     res.status(401).send({ errors: "Please authenicate using a valid token" });
   } else {
+    // verify token
     try {
       const data = jwt.verify(token, "secretKeyCuaNghia");
-      req.user = data.user;
+      req.userId = data.userId;
+      console.log(data.userKeys);
       next();
     } catch (error) {
-      res
-        .status(401)
-        .send({ errors: "Please authenicate using a valid token  " });
+      console.log("error", error);
     }
   }
 };
@@ -311,10 +337,22 @@ app.post("/removefromcart", fetchUser, async (req, res) => {
 });
 
 // creating get cartData
+// app.post("/getcart", fetchUser, async (req, res) => {
+//   console.log("Get cart");
+//   let userData = await Users.findOne({ _id: req.user.id });
+//   res.json(userData.cartData);
+// });
+
 app.post("/getcart", fetchUser, async (req, res) => {
   console.log("Get cart");
-  let userData = await Users.findOne({ _id: req.user.id });
-  res.json(userData.cartData);
+  // lấy users data và lặp qua 1 lần để lấy ra giá trị của cart
+  fb.ref("users").once("value", (snapshot) => {
+    if (snapshot.exists()) {
+      const users = snapshot.val();
+      const userKeys = Object.keys(users);
+      console.log("keys",userKeys);
+    }
+  });
 });
 
 app.listen(port, (error) => {

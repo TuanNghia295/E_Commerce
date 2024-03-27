@@ -22,11 +22,13 @@ const LoginSignUp = () => {
 
   const login = async () => {
     let responseData;
+    const token = localStorage.getItem("authToken");
     await fetch("http://localhost:2905/login", {
       method: "POST",
       headers: {
         Accept: "application/form-data",
         "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
       },
       body: JSON.stringify(formData),
     })
@@ -38,7 +40,6 @@ const LoginSignUp = () => {
     } else {
       alert(responseData.error);
     }
-    console.log(responseData);
   };
 
   const signUp = async () => {
@@ -57,6 +58,7 @@ const LoginSignUp = () => {
       .then((data) => (responseData = data));
     if (responseData.success) {
       localStorage.setItem("authToken", responseData.token);
+      alert("Create account successfully")
       window.location.replace("/");
     } else {
       alert(responseData.error);
