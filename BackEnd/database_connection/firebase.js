@@ -8,5 +8,5 @@ admin.initializeApp({
 });
 
 // Export Firebase Realtime Database để sử dụng ở nơi khác
-const db = admin.database();
-module.exports = db;
+const fb = admin.database();
+module.exports = fb;

@@ -10,6 +10,7 @@ const Users = require("./schema/user");
 const db = require("./database_connection/index");
 const fb = require("./database_connection/firebase");
 const session = require("express-session");
+const admin = require("firebase-admin");
 
 app.use(express.json());
 app.use(cors());
@@ -141,7 +142,6 @@ app.post("/login", async (req, res) => {
   userRef.once("value", (snapshot) => {
     if (snapshot.exists()) {
       const users = snapshot.val();
-      console.log("users", users);
       // Kiểm tra xem có người dùng nào có email và password khớp với yêu cầu đăng nhập hay không
       const userKeys = Object.keys(users);
       const foundUserKey = userKeys.find((userKey) => {
@@ -150,11 +150,13 @@ app.post("/login", async (req, res) => {
       });
 
       if (foundUserKey) {
-        const foundUser = users[foundUserKey];
-        console.log("user found", foundUser);
-
+        const token = jwt.sign({ userKeys }, "secretKeyCuaNghia", {
+          expiresIn: "1h",
+        });
         // login success
-        res.status(200).json({ success: true, message: "Login Successfully" });
+        res
+          .status(200)
+          .json({ success: true, message: "Login Successfully", token });
       } else {
         console.log("Không tìm thấy người dùng");
         res
@@ -195,7 +197,7 @@ passport.deserializeUser(function (obj, done) {
   done(null, obj);
 });
 
-require('dotenv').config();
+require("dotenv").config();
 
 const googleClientId = process.env.CLIENT_ID;
 const googleClientSecret = process.env.CLIENT_SECRET;
@@ -230,7 +232,7 @@ app.get(
   }),
   function (req, res) {
     // Xử lý sau khi đăng nhập thành công
-    res.send(`Hello ${req.user.displayName}!`)
+    res.send(`Hello ${req.user.displayName}!`);
   }
 );
 

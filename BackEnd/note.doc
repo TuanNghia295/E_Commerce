@@ -12,3 +12,5 @@ tóm tắt:
 - Tạo Tệp Service Account Key
 - Kết nối và Thao tác với Firebase Realtime Database
 
+Để có thể thực hiện chức năng đăng nhập bằng bên thứ 3 như face book và google
+sử dụng thư viện passport,passport-facebook,passport-google-oauth20
