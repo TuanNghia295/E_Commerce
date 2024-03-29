@@ -221,12 +221,16 @@ passport.use(
     },
     function (accessToken, refreshToken, profile, done) {
       console.log("accessToken: " + accessToken);
-      console.log("refreshToken" + refreshToken);
-      console.log("profile" + profile);
-      return done(null, profile);
+      // console.log("refreshToken" + refreshToken);
+      console.log("profile", profile);
+      return done(null, {profile,accessToken}); // will return in request
     }
   )
 );
+
+passport.session(session, function (err, session) {
+  console.log("error and session", err, session);
+});
 
 // Endpoint đăng nhập bằng tài khoản Google
 app.get(
@@ -241,7 +245,9 @@ app.get(
   }),
   function (req, res) {
     // Xử lý sau khi đăng nhập thành công
-    res.send(`Hello ${req.user.displayName}!`);
+    const accessToken = req.user.accessToken;
+    const userProfile = req.user.profile
+    res.json({accessToken,userProfile});
   }
 );
 
@@ -350,7 +356,7 @@ app.post("/getcart", fetchUser, async (req, res) => {
     if (snapshot.exists()) {
       const users = snapshot.val();
       const userKeys = Object.keys(users);
-      console.log("keys",userKeys);
+      console.log("keys", userKeys);
     }
   });
 });

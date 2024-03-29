@@ -1,6 +1,7 @@
 import classNames from "classnames/bind";
 import styles from "./scss/loginSignUp.module.scss";
 import { useState } from "react";
+import axios from "axios"
 
 const cx = classNames.bind(styles);
 const LoginSignUp = () => {
@@ -65,9 +66,11 @@ const LoginSignUp = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     window.location.href = "http://localhost:2905/auth/google"; // Chuyển hướng đến route xác thực của Google khi nhấn nút
   };
+  
+  
 
   return (
     <div className={cx("loginSingup")}>
