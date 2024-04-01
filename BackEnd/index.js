@@ -1,4 +1,3 @@
-const port = 2905;
 const express = require("express");
 const app = express();
 const jwt = require("jsonwebtoken");
@@ -10,9 +9,22 @@ const Users = require("./schema/user");
 const db = require("./database_connection/index");
 const fb = require("./database_connection/firebase");
 const session = require("express-session");
+const router = require("./routes/authRouter");
+require("dotenv").config()
+require("./config/passport")
+let port = 2905;
 
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.URL_CLIENT,
+    credentials: true, // Allow requests from any origin (you can specify specific origins here)
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Allow specified HTTP methods
+    allowedHeaders: "Content-Type,Authorization", // Allow specified headers
+    preflightContinue: false, // Disable preflight caching
+    optionsSuccessStatus: 204, // Set the success status for OPTIONS requests
+  })
+);
 
 // Database connection with mogoDB
 const username = "tuannghiait2905";
@@ -189,67 +201,11 @@ app.use(
   })
 );
 
-const passport = require("passport");
-const FacebookStrategy = require("passport-facebook").Strategy;
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
-// Middleware của Passport
-app.use(passport.initialize());
-app.use(passport.session());
-
-// Cấu hình serialize và deserialize user
-passport.serializeUser(function (user, done) {
-  done(null, user);
+// endpoint get user
+app.get("/user", (req, res) => {
+  res.json(req.user);
 });
-
-passport.deserializeUser(function (obj, done) {
-  done(null, obj);
-});
-
-require("dotenv").config();
-
-const googleClientId = process.env.CLIENT_ID;
-const googleClientSecret = process.env.CLIENT_SECRET;
-
-// Cấu hình Passport
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: googleClientId,
-      clientSecret: googleClientSecret,
-      callbackURL: "http://localhost:2905/auth/google/callback",
-    },
-    function (accessToken, refreshToken, profile, done) {
-      console.log("accessToken: " + accessToken);
-      // console.log("refreshToken" + refreshToken);
-      console.log("profile", profile);
-      return done(null, {profile,accessToken}); // will return in request
-    }
-  )
-);
-
-passport.session(session, function (err, session) {
-  console.log("error and session", err, session);
-});
-
-// Endpoint đăng nhập bằng tài khoản Google
-app.get(
-  "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
-
-app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", {
-    failureRedirect: "/login",
-  }),
-  function (req, res) {
-    // Xử lý sau khi đăng nhập thành công
-    const accessToken = req.user.accessToken;
-    const userProfile = req.user.profile
-    res.json({accessToken,userProfile});
-  }
-);
 
 // creating endpoint for newCollections data
 app.get("/newcollections", async (req, res) => {
@@ -360,6 +316,8 @@ app.post("/getcart", fetchUser, async (req, res) => {
     }
   });
 });
+
+app.use("/",router)
 
 app.listen(port, (error) => {
   if (!error) {

@@ -1,7 +1,7 @@
 import classNames from "classnames/bind";
 import styles from "./scss/loginSignUp.module.scss";
-import { useState } from "react";
-import axios from "axios"
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 const cx = classNames.bind(styles);
 const LoginSignUp = () => {
@@ -59,19 +59,16 @@ const LoginSignUp = () => {
       .then((data) => (responseData = data));
     if (responseData.success) {
       localStorage.setItem("authToken", responseData.token);
-      alert("Create account successfully")
+      alert("Create account successfully");
       window.location.replace("/");
     } else {
       alert(responseData.error);
     }
   };
 
-  const handleGoogleLogin = async () => {
-    window.location.href = "http://localhost:2905/auth/google"; // Chuyển hướng đến route xác thực của Google khi nhấn nút
+  const handleGoogleLogin = () => {
+    window.location.href = "http://localhost:2905/auth/google";
   };
-  
-  
-
   return (
     <div className={cx("loginSingup")}>
       <div className={cx("loginSignup-container")}>
