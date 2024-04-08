@@ -11,6 +11,7 @@ import men_banner from "./components/assets/Ecommerce_Frontend_Assets/Assets/ban
 import women_banner from "./components/assets/Ecommerce_Frontend_Assets/Assets/banner_women.png";
 import kid_banner from "./components/assets/Ecommerce_Frontend_Assets/Assets/banner_kids.png";
 
+
 function App() {
   return (
     <div>
@@ -18,6 +19,7 @@ function App() {
         <Navbar></Navbar>
         <Routes>
           <Route path="/" element={<Home />}></Route>
+          <Route path="/:userId" element={<Home/>}></Route>
           <Route path="/men" element={<ShopCategory banner={men_banner} categories="men" />}></Route>
           <Route path="/women" element={<ShopCategory banner={women_banner} categories="women" />}></Route>
           <Route path="/kid" element={<ShopCategory banner={kid_banner} categories="kid" />}></Route>

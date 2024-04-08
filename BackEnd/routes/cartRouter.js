@@ -1,0 +1,33 @@
+const express = require("express");
+const router = express.Router();
+
+const cartController = require("../controllers/CartController");
+const jwt = require("jsonwebtoken");
+require("dotenv").config()
+
+
+// Viết hàm lấy dữ liệu của người dùng từ token tên là fetchUser
+// Ở đây hàm sẽ trả về đúng tài khoản cần tìm bằng việc verify token
+const fetchUser = async (req,res,next)=>{
+  const token = req.headers['authorization']
+  if(token){
+    // verify token để lấy ra key của user là userId
+    // từ userId này, ta gửi nó ngược lại cho client hoặc xử lý tiếp trong server
+    // với các hàm như get cart, add to cart,...
+    const userInfo = jwt.verify(token,process.env.PRIVATE_KEY_SESSION)
+    console.log("user info: \n",userInfo);
+   
+    // lưu userId vào req object
+    req.userId = userInfo.userId
+    console.log("req.userId: \n",req.userId);
+    next()
+  }
+  else{
+    res.status(401).send({ errors: "Invalid token or token expired" });
+  }
+}
+router.post("/getcart", fetchUser, cartController.getcart);
+router.post("/addtocart", fetchUser, cartController.addtocart);
+router.post("/removefromcart", fetchUser, cartController.removefromcart);
+
+module.exports = router;

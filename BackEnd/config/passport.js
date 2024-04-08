@@ -35,13 +35,6 @@ passport.use(
   )
 );
 
-// Lưu thông tin người dùng vào session
-passport.serializeUser(function (user, done) {
-  done(null, user);
-});
 
-passport.deserializeUser(function (obj, done) {
-  done(null, obj);
-});
 
 module.exports = passport;

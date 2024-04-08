@@ -1,8 +1,6 @@
 const express = require("express");
 const app = express();
 const jwt = require("jsonwebtoken");
-const multer = require("multer");
-const path = require("path");
 const cors = require("cors");
 const Product = require("./schema/product");
 const Users = require("./schema/user");
@@ -10,21 +8,37 @@ const db = require("./database_connection/index");
 const fb = require("./database_connection/firebase");
 const session = require("express-session");
 const router = require("./routes/authRouter");
-require("dotenv").config()
-require("./config/passport")
+const cookieSession = require("cookie-session");
+const passport = require("passport");
+const routes = require("./routes");
+require("dotenv").config();
+require("./config/passport");
 let port = 2905;
 
 app.use(express.json());
+app.use(
+  cookieSession({
+    name: "session",
+    keys: [process.env.PRIVATE_KEY_SESSION],
+    maxAge: 24 * 60 * 60 * 100,
+  })
+);
+
+passport.initialize();
+passport.session();
+
 app.use(
   cors({
     origin: process.env.URL_CLIENT,
     credentials: true, // Allow requests from any origin (you can specify specific origins here)
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Allow specified HTTP methods
-    allowedHeaders: "Content-Type,Authorization", // Allow specified headers
+    allowedHeaders: "Content-Type,Authorization,authtoken", // Allow specified headers
     preflightContinue: false, // Disable preflight caching
     optionsSuccessStatus: 204, // Set the success status for OPTIONS requests
   })
 );
+
+routes(app);
 
 // Database connection with mogoDB
 const username = "tuannghiait2905";
@@ -37,77 +51,15 @@ app.get("/", (req, res) => {
   res.send("Express App is running");
 });
 
-// Imgaes storage engine
-const storage = multer.diskStorage({
-  // destination: nơi gửi tới, nơi đưa tới, nơi đi tới,sự dự định; mục đích dự định
-  destination: "./upload/images",
-  filename: (req, file, cb) => {
-    return cb(
-      null,
-      `${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`
-    );
-  },
-});
-
-const upload = multer({ storage: storage });
-
-// creating upload endpoint for images
-// Middleware upload.single("product") sẽ xử lý việc tải lên một tệp tin
-// và tệp tin này sẽ được gán vào trường có tên là "product" trong yêu cầu (req).
-
 app.use("/images", express.static("upload/images"));
-app.post("/upload", upload.single("product"), (req, res, next) => {
-  res.json({
-    success: 1,
-    image_url: `http://localhost:${port}/images/${req.file.filename}`,
-  });
-});
 
-// Schema for creating product
-app.post("/addProduct", async (req, res) => {
-  let products = await Product.find({});
-  let id;
-  if (products.length > 0) {
-    // lấy ra phần tử cuối cùng trong mảng products
-    let last_product_in_array = products.slice(-1);
-    //   Gán phần tử cuối cùng vào biến mới
-    let last_product = last_product_in_array[0];
-    id = last_product.id + 1;
-  } else {
-    id = 1;
+const generateCartData = () => {
+  const cartData = {};
+  for (let index = 1; index <= 300; index++) {
+    cartData[index] = 0;
   }
-  const product = new Product({
-    id: id,
-    name: req.body.name,
-    image: req.body.image,
-    category: req.body.category,
-    new_price: req.body.new_price,
-    old_price: req.body.old_price,
-  });
-  console.log(product);
-  await product.save();
-  console.log("saved");
-  res.json({
-    success: true,
-    name: req.body.name,
-  });
-});
-
-// creating API for deleting products
-app.post("/removeProduct", async (req, res, next) => {
-  await Product.findOneAndDelete({ id: req.body.id });
-  console.log("removed");
-  res.json({
-    success: true,
-    name: req.body.name,
-  });
-});
-
-// Creating API for getting all products
-app.get("/allProducts", async (req, res, next) => {
-  let products = await Product.find({});
-  res.send(products);
-});
+  return cartData;
+};
 
 // Creating endpoint for registering the users
 app.post("/signUp", async (req, res, next) => {
@@ -131,22 +83,27 @@ app.post("/signUp", async (req, res, next) => {
           email: req.body.email,
           name: req.body.username,
           password: req.body.password,
-          cartData: Array.from({ length: 300 }, (_, index) => ({
-            id: index + 1 /* các thuộc tính khác của object */,
-          })),
+          cartData: generateCartData(),
+          date: Date.now(),
         })
 
         .then((snapshot) => {
           const key = snapshot.key;
+
+          const payload = {
+            userId: key,
+          };
+          const token = jwt.sign(payload, process.env.PRIVATE_KEY_SESSION, {
+            expiresIn: "1h",
+          });
           return res.json({
             key,
+            token,
             success: true,
             email: req.body.email,
             name: req.body.username,
             password: req.body.password,
-            cartData: Array.from({ length: 300 }, (_, index) => ({
-              id: index + 1 /* các thuộc tính khác của object */,
-            })),
+            cartData: generateCartData(),
           });
         });
     }
@@ -171,9 +128,13 @@ app.post("/login", async (req, res) => {
       });
 
       if (foundUserKey) {
-        const token = jwt.sign({ userKeys }, "secretKeyCuaNghia", {
-          expiresIn: "1h",
-        });
+        const token = jwt.sign(
+          { userId: foundUserKey },
+          process.env.PRIVATE_KEY_SESSION,
+          {
+            expiresIn: "1h",
+          }
+        );
         // login success
         res
           .status(200)
@@ -202,26 +163,6 @@ app.use(
 );
 
 
-// endpoint get user
-app.get("/user", (req, res) => {
-  res.json(req.user);
-});
-
-// creating endpoint for newCollections data
-app.get("/newcollections", async (req, res) => {
-  let products = await Product.find({});
-  let newCollections = products.slice(1).slice(-8);
-  // console.log("newCollections", newCollections);
-  res.send(newCollections);
-});
-
-// creating endpoint for popular in women section
-app.get("/popularinwoman", async (req, res) => {
-  let products = await Product.find({ category: "women" });
-  let popular_in_women = products.slice(0, 4);
-  // console.log("women fetched", popular_in_women);
-  res.send(popular_in_women);
-});
 
 // creating middleware to fetch user id
 // const fetchUser = async (req, res, next) => {
@@ -241,63 +182,6 @@ app.get("/popularinwoman", async (req, res) => {
 //   }
 // };
 
-const fetchUser = async (req, res, next) => {
-  const token = req.header("Authorization");
-  if (!token) {
-    res.status(401).send({ errors: "Please authenicate using a valid token" });
-  } else {
-    // verify token
-    try {
-      const data = jwt.verify(token, "secretKeyCuaNghia");
-      req.userId = data.userId;
-      console.log(data.userKeys);
-      next();
-    } catch (error) {
-      console.log("error", error);
-    }
-  }
-};
-
-// creating endpoints for addings products in data
-app.post("/addtocart", fetchUser, async (req, res) => {
-  console.log("added", req.body.itemID);
-
-  let userData = await Users.findOne({
-    _id: req.user.id,
-  });
-
-  userData.cartData[req.body.itemID] += 1;
-  await Users.findOneAndUpdate(
-    {
-      _id: req.user.id,
-    },
-    {
-      cartData: userData.cartData,
-    }
-  );
-  res.send("Added");
-});
-
-// creating endpoints to remove products from cartdata
-app.post("/removefromcart", fetchUser, async (req, res) => {
-  console.log("remove", req.body.itemID);
-  let userData = await Users.findOne({
-    _id: req.user.id,
-  });
-  if (userData.cartData[req.body.itemID] > 0) {
-    userData.cartData[req.body.itemID] -= 1;
-  }
-  await Users.findOneAndUpdate(
-    {
-      _id: req.user.id,
-    },
-    {
-      cartData: userData.cartData,
-    }
-  );
-  res.send("Removed");
-});
-
 // creating get cartData
 // app.post("/getcart", fetchUser, async (req, res) => {
 //   console.log("Get cart");
@@ -305,19 +189,7 @@ app.post("/removefromcart", fetchUser, async (req, res) => {
 //   res.json(userData.cartData);
 // });
 
-app.post("/getcart", fetchUser, async (req, res) => {
-  console.log("Get cart");
-  // lấy users data và lặp qua 1 lần để lấy ra giá trị của cart
-  fb.ref("users").once("value", (snapshot) => {
-    if (snapshot.exists()) {
-      const users = snapshot.val();
-      const userKeys = Object.keys(users);
-      console.log("keys", userKeys);
-    }
-  });
-});
-
-app.use("/",router)
+app.use("/", router);
 
 app.listen(port, (error) => {
   if (!error) {

@@ -1,1 +1,2 @@
 shop category dùng để phân loại sản phẩm hiển thị
+sử dụng thư viện redux-persist để lưu token vào localStorage

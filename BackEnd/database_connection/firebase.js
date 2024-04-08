@@ -4,7 +4,7 @@ const serviceAccount = require('../json/lap-trinh-tich-hop-nang-45d37-firebase-a
 // Khởi tạo Firebase Admin SDK
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://lap-trinh-tich-hop-nang-45d37-default-rtdb.firebaseio.com/' // Thay thế bằng URL của Firebase Realtime Database của bạn
+  databaseURL: 'https://lap-trinh-tich-hop-nang-45d37-default-rtdb.firebaseio.com/' 
 });
 
 // Export Firebase Realtime Database để sử dụng ở nơi khác

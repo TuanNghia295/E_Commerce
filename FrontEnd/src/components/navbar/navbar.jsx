@@ -72,10 +72,10 @@ export const Navbar = () => {
       </ul>
 
       <div className={cx("nav-login-cart")}>
-        {localStorage.getItem("authToken") ? (
+        {localStorage.getItem("Authorization") ? (
           <button
             onClick={() => {
-              localStorage.removeItem("authToken");
+              localStorage.removeItem("Authorization");
               window.location.replace("/");
             }}
           >

@@ -23,7 +23,7 @@ const LoginSignUp = () => {
 
   const login = async () => {
     let responseData;
-    const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("Authorization");
     await fetch("http://localhost:2905/login", {
       method: "POST",
       headers: {
@@ -33,10 +33,10 @@ const LoginSignUp = () => {
       },
       body: JSON.stringify(formData),
     })
-      .then((repsonse) => repsonse.json())
-      .then((data) => (responseData = data));
+    .then((repsonse) => repsonse.json())
+    .then((data) => (responseData = data));
     if (responseData.success) {
-      localStorage.setItem("authToken", responseData.token);
+      localStorage.setItem("Authorization", responseData.token);
       window.location.replace("/");
     } else {
       alert(responseData.error);
@@ -46,11 +46,13 @@ const LoginSignUp = () => {
   const signUp = async () => {
     console.log("signUp", formData);
     let responseData;
+    const token = localStorage.getItem("Authorization");
     await fetch("http://localhost:2905/signUp", {
       method: "POST",
       headers: {
         Accept: "application/form-data",
         "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
       },
       // sẽ chuyển giá trị object của formData thành dạng JSON chuỗi
       body: JSON.stringify(formData),
@@ -58,7 +60,7 @@ const LoginSignUp = () => {
       .then((response) => response.json())
       .then((data) => (responseData = data));
     if (responseData.success) {
-      localStorage.setItem("authToken", responseData.token);
+      localStorage.setItem("Authorization", responseData.token);
       alert("Create account successfully");
       window.location.replace("/");
     } else {

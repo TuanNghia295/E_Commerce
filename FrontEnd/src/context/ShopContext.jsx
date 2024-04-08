@@ -18,13 +18,12 @@ const ShopContextProvider = (props) => {
     fetch("http://localhost:2905/allProducts")
       .then((response) => response.json())
       .then((data) => setAllProduct(data));
-
-    if (localStorage.getItem("authToken")) {
-      fetch("http://localhost:2905/getcart", {
+    if (localStorage.getItem("Authorization")) {
+      fetch("http://localhost:2905/cart/getcart", {
         method: "POST",
         headers: {
           Accept: "application/form-data",
-          authToken: `${localStorage.getItem("authToken")}`,
+          Authorization: `${localStorage.getItem("Authorization")}`,
           "Content-Type": "application/json",
         },
         body: "",
@@ -36,12 +35,12 @@ const ShopContextProvider = (props) => {
 
   const addToCart = (itemID) => {
     setCartItems((prev) => ({ ...prev, [itemID]: prev[itemID] + 1 }));
-    if (localStorage.getItem("authToken")) {
-      fetch("http://localhost:2905/addtocart", {
+    if (localStorage.getItem("Authorization")) {
+      fetch("http://localhost:2905/cart/addtocart", {
         method: "POST",
         headers: {
           Accept: "application/data",
-          authToken: `${localStorage.getItem("authToken")}`,
+          Authorization: `${localStorage.getItem("Authorization")}`,
           "Content-type": "application/json",
         },
         body: JSON.stringify({ itemID: itemID }),
@@ -58,7 +57,7 @@ const ShopContextProvider = (props) => {
         method: "POST",
         headers: {
           Accept: "application/data",
-          authToken: `${localStorage.getItem("authToken")}`,
+          Authorization: `${localStorage.getItem("Authorization")}`,
           "Content-type": "application/json",
         },
         body: JSON.stringify({ itemID: itemID }),
