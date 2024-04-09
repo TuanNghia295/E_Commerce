@@ -15,16 +15,18 @@ const ListProduct = () => {
   }, []);
 
   const removeProduct = async (id) => {
-    await fetch("http://localhost:2905/removeProduct", {
+    await fetch("http://localhost:2905/allProducts/removeProduct", {
       method: "POST",
       headers: {
         // headers có thể chứa thông tin như các thông số của request,
         // authentication tokens, và nhiều thông tin khác.
-        Accepts: "application/json",
+        Accept: "application/json",
         "Content-Type": "application/json",
       },
       // Body là phần dữ liệu mà ta truyền đi để có thể xử lý
-      body: JSON.stringify({ id: id }),
+      body: JSON.stringify({ pro_code: id }),
+    }).catch(function (err) {
+      console.log("error deleting", err);
     });
     await fetchInfo();
   };
@@ -43,26 +45,28 @@ const ListProduct = () => {
       <div className="listProduct-allProduct">
         <hr />
         {allProducts.map((product, indexedDB) => {
-          const { id, name, image, old_price, new_price, category } = product;
+          const { pro_code, name, image, old_price, new_price, category } =
+            product;
           return (
-            <>
-              <div
-                key={indexedDB}
-                className="listProduct-format-main listProduct-format"
-              >
-                <img src={image} alt="" className="listProduct-productIcon" />
+            <div key={indexedDB}>
+              <div className="listProduct-format-main listProduct-format">
+                <img
+                  src={image.replace(";", "")}
+                  alt=""
+                  className="listProduct-productIcon"
+                />
                 <p>{name}</p>
                 <p>${old_price}</p>
                 <p>${new_price}</p>
                 <p>{category}</p>
                 <CiSquareRemove
                   className="listProduct-removeIcon"
-                  onClick={() => removeProduct(id)}
+                  onClick={() => removeProduct(pro_code)}
                 />
               </div>
               ;
               <hr />
-            </>
+            </div>
           );
         })}
       </div>

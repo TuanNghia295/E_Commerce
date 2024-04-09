@@ -27,14 +27,15 @@ app.use(
 passport.initialize();
 passport.session();
 
+const whiteList = [process.env.URL_CLIENT.split(",").map((url) => url.trim())];
 app.use(
   cors({
-    origin: process.env.URL_CLIENT,
-    credentials: true, // Allow requests from any origin (you can specify specific origins here)
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Allow specified HTTP methods
-    allowedHeaders: "Content-Type,Authorization,authtoken", // Allow specified headers
-    preflightContinue: false, // Disable preflight caching
-    optionsSuccessStatus: 204, // Set the success status for OPTIONS requests
+    origin: whiteList,
+    credentials: true, // Cho phép gửi cookie cross-origin
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Cho phép sử dụng các phương thức HTTP cụ thể
+    allowedHeaders: ["Content-Type", "Authorization", "authtoken"], // Cho phép sử dụng các header cụ thể
+    preflightContinue: false, // Tắt preflight caching
+    optionsSuccessStatus: 204, // Set mã status thành công cho các yêu cầu OPTIONS
   })
 );
 
@@ -161,33 +162,6 @@ app.use(
     saveUninitialized: true,
   })
 );
-
-
-
-// creating middleware to fetch user id
-// const fetchUser = async (req, res, next) => {
-//   const token = req.header("authToken");
-//   if (!token) {
-//     res.status(401).send({ errors: "Please authenicate using a valid token" });
-//   } else {
-//     try {
-//       const data = jwt.verify(token, "secretKeyCuaNghia");
-//       req.user = data.user;
-//       next();
-//     } catch (error) {
-//       res
-//         .status(401)
-//         .send({ errors: "Please authenicate using a valid token  " });
-//     }
-//   }
-// };
-
-// creating get cartData
-// app.post("/getcart", fetchUser, async (req, res) => {
-//   console.log("Get cart");
-//   let userData = await Users.findOne({ _id: req.user.id });
-//   res.json(userData.cartData);
-// });
 
 app.use("/", router);
 

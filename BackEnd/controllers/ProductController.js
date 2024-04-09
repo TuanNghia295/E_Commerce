@@ -11,19 +11,8 @@ class ProductController {
   // Schema for creating product
   // POST /addProduct
   async addProduct(req, res) {
-    let products = await Product.find({});
-    let id;
-    if (products.length > 0) {
-      // lấy ra phần tử cuối cùng trong mảng products
-      let last_product_in_array = products.slice(-1);
-      //   Gán phần tử cuối cùng vào biến mới
-      let last_product = last_product_in_array[0];
-      id = last_product.id + 1;
-    } else {
-      id = 1;
-    }
     const product = new Product({
-      id: id,
+      pro_code: req.body.pro_code,
       name: req.body.name,
       image: req.body.image,
       category: req.body.category,
@@ -41,7 +30,7 @@ class ProductController {
 
   // creating API for deleting products
   async removeProduct(req, res, next) {
-    await Product.findOneAndDelete({ id: req.body.id });
+    await Product.findOneAndDelete({ pro_code: req.body.pro_code});
     console.log("removed");
     res.json({
       success: true,

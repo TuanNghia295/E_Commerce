@@ -4,6 +4,7 @@ import { SlCloudUpload } from "react-icons/sl";
 const AddProduct = () => {
   const [image, setImage] = useState(false);
   const [productDetails, setProductDetails] = useState({
+    pro_code: "",
     name: "",
     image: "",
     category: "women",
@@ -16,7 +17,11 @@ const AddProduct = () => {
   };
 
   const changeHandler = (e) => {
-    setProductDetails({ ...productDetails, [e.target.name]: e.target.value });
+    setProductDetails({
+      ...productDetails,
+      [e.target.pro_code]: [e.target.value],
+      [e.target.name]: e.target.value,
+    });
   };
 
   const addProduct = async () => {
@@ -37,26 +42,39 @@ const AddProduct = () => {
       .then((res) => res.json())
       .then((data) => {
         responseData = data;
-      });
-      if(responseData.success){
-        product.image = responseData.image_url
-        console.log(product);
-        await fetch("http://localhost:2905/addProduct",{
-          method: "POST",
-          headers:{
-            Accept: "application/json",
-            'Content-Type':"application/json"
-          },
-          body: JSON.stringify(product),
-        }).then((res) => res.json()).then((data) => {
-          data.success  ? alert("Product added") : alert("Failed")
-        })
-      }
-
+      })
+      .catch((err) => console.log("error upload", err));
+    if (responseData.success) {
+      product.image = responseData.image_url;
+      console.log(product);
+      await fetch("http://localhost:2905/allProducts/addProduct", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(product),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          data.success ? alert("Product added") : alert("Failed");
+        });
+    }
   };
 
   return (
     <div className="addProduct">
+      <div className="addProduct-item-field">
+        <p>Product code</p>
+        <input
+          value={productDetails.pro_code}
+          onChange={changeHandler}
+          type="text"
+          name="pro_code"
+          id=""
+          placeholder="Type here"
+        />
+      </div>
       <div className="addProduct-item-field">
         <p>Product title</p>
         <input

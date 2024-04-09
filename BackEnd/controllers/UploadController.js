@@ -4,7 +4,7 @@ class UploadController {
   // [POST] /upload
   async uploadCourses(req, res, next) {
     res.json({
-      success: 1,
+      success: true,
       image_url: `http://localhost:${process.env.PORT}/images/${req.file.filename}`,
     });
   }
