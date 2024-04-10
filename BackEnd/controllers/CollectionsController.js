@@ -1,12 +1,12 @@
 const Product = require("../schema/product");
 
 class CollectionsController {
-  // creating endpoint for newCollections data
+  // creating endpoint for newCollections dnewcollectionsata
   //   GET /collections
   async newcollections(req, res) {
     let products = await Product.find({});
     let newCollections = products.slice(1).slice(-8);
-    // console.log("newCollections", newCollections);
+    console.log("newCollections", newCollections);
     res.send(newCollections);
   }
 

@@ -10,11 +10,11 @@ const RelatedProducts = () => {
       <hr />
       <div className={cx("relatedProducts-item")}>
         {data_product.map((item, index) => {
-          const { id, name, image, new_price, old_price } = item;
+          const { pro_code, name, image, new_price, old_price } = item;
           return (
             <Item
               key={index}
-              id={id}
+              id={pro_code}
               name={name}
               image={image}
               new_price={new_price}

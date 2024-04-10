@@ -13,7 +13,7 @@ const NewCollections = () => {
         .then((response) => response.json())
         .then((data) => setNew_collection(data));
     }
-    fecthNewCollections()
+    fecthNewCollections();
   }, []);
 
   return (
@@ -22,11 +22,11 @@ const NewCollections = () => {
       <hr />
       <div className={cx("collections")}>
         {new_collection.map((item, index) => {
-          const { id, name, image, new_price, old_price } = item;
+          const { pro_code, name, image, new_price, old_price } = item;
           return (
             <Item
               key={index}
-              id={id}
+              id={pro_code}
               name={name}
               image={image}
               new_price={new_price}

@@ -7,6 +7,7 @@ import styles from "./scss/shopCategory.module.scss";
 const cx = classNames.bind(styles);
 const ShopCategory = ({ banner, categories }) => {
   const { all_product } = useContext(ShopContext);
+  console.log("men all product",all_product);
   return (
     <div className={cx("shop-category")}>
       <img className={cx("shopcategory-banner")} src={banner} alt="" />
@@ -23,12 +24,12 @@ const ShopCategory = ({ banner, categories }) => {
 
       <div className={cx("shopcategory-products")}>
         {all_product.map((item, index) => {
-          const { id, image, name, category, new_price, old_price } = item;
+          const { pro_code, image, name, category, new_price, old_price } = item;
           if (categories === category) {
             return (
               <Item
                 key={index}
-                id={id}
+                id={pro_code}
                 name={name}
                 image={image}
                 new_price={new_price}

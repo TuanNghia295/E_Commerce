@@ -7,19 +7,19 @@ import { ShopContext } from "../../context/ShopContext";
 
 const cx = classNames.bind(styles);
 const ProductDisplay = ({ product }) => {
-  const {addToCart} = useContext(ShopContext)
+  const { addToCart } = useContext(ShopContext);
   return (
     <div className={cx("productDisplay")}>
-      <div className={cx("productDisplay-left")}>
+      <div className={cx("productDisplay-left"   )}>
         <div className={cx("productDisplay-img-list")}>
-          <img src={product.image} alt="" />
-          <img src={product.image} alt="" />
-          <img src={product.image} alt="" />
-          <img src={product.image} alt="" />
+          <img src={product.image.replace(";","")} alt="" />
+          <img src={product.image.replace(";","")} alt="" />
+          <img src={product.image.replace(";","")} alt="" />
+          <img src={product.image.replace(";","")} alt="" />
         </div>
         <div className={cx("productDisplay-img")}>
           <img
-            src={product.image}
+            src={product.image.replace(";","")}
             className={cx("productDisplay-main-img")}
             alt=""
           />
@@ -58,7 +58,7 @@ const ProductDisplay = ({ product }) => {
             <div>XL</div>
             <div>XXL</div>
           </div>
-          <button onClick={()=>addToCart(product.id)}>ADD TO CART</button>
+          <button onClick={() => addToCart(product.pro_code)}>ADD TO CART</button>
           {/* <p className={cx("productDisplay-category")}>
             <span>Category :</span> Women, T-shirt, Crop top
           </p>

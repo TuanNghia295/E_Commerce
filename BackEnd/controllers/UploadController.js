@@ -1,4 +1,9 @@
 require("dotenv").config();
+// using fs.unlink to delete files
+const fs = require("fs");
+const { promisify } = require("util");
+
+const unLinkAsync = promisify(fs.unlink);
 
 class UploadController {
   // [POST] /upload

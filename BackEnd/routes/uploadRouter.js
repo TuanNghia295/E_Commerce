@@ -5,6 +5,7 @@ const UploadController = require("../controllers/UploadController");
 const path = require("path");
 
 
+
 // creating upload endpoint for images
 const storage = multer.diskStorage({
   // destination: nơi gửi tới, nơi đưa tới, nơi đi tới,sự dự định; mục đích dự định
@@ -18,9 +19,8 @@ const storage = multer.diskStorage({
 });
 
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage: storage }).single("product");
 // Middleware upload.single("product") sẽ xử lý việc tải lên một tệp tin
 // và tệp tin này sẽ được gán vào trường có tên là "product" trong yêu cầu (req).
-router.post("/", upload.single("product"), UploadController.uploadCourses);
-
+router.post("/", upload, UploadController.uploadCourses);
 module.exports = router;
