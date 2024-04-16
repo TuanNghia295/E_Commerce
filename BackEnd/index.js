@@ -2,8 +2,6 @@ const express = require("express");
 const app = express();
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
-const Product = require("./schema/product");
-const Users = require("./schema/user");
 const db = require("./database_connection/index");
 const fb = require("./database_connection/firebase");
 const session = require("express-session");
@@ -54,64 +52,66 @@ app.get("/", (req, res) => {
 
 app.use("/images", express.static("upload/images"));
 
-const generateCartData = () => {
-  const cartData = {};
-  for (let index = 1; index <= 300; index++) {
-    cartData[index] = 0;
-  }
-  return cartData;
-};
-
 // Creating endpoint for registering the users
 app.post("/signUp", async (req, res, next) => {
   const { email } = req.body;
   try {
-    // check email exits in database or not
-    // orderByChild: yêu cầu giá trị cụ thể được định nghĩa bằng key email hoặc đường dẫn lồng nhau
     const snapshot = await fb
       .ref("users")
       .orderByChild("email")
       .equalTo(email)
       .once("value");
+
     if (snapshot.exists()) {
       return res.status(400).json({
-        error: "Email has been used",
+        error: "Email đã được sử dụng",
       });
     } else {
       const userRef = fb.ref("users");
-      userRef
-        .push({
+      userRef.push({
+        email: req.body.email,
+        name: req.body.username,
+        password: req.body.password,
+        cartData: [], // Đảm bảo cartData là một mảng rỗng
+        date: Date.now(),
+      })
+      .then((snapshot) => {
+        const key = snapshot.key;
+
+        const payload = {
+          userId: key,
+        };
+        const token = jwt.sign(payload, process.env.PRIVATE_KEY_SESSION, {
+          expiresIn: "1h",
+        });
+
+        // Bao gồm cartData trong phản hồi
+        return res.json({
+          key,
+          token,
+          success: true,
           email: req.body.email,
           name: req.body.username,
           password: req.body.password,
-          cartData: generateCartData(),
-          date: Date.now(),
-        })
-
-        .then((snapshot) => {
-          const key = snapshot.key;
-
-          const payload = {
-            userId: key,
-          };
-          const token = jwt.sign(payload, process.env.PRIVATE_KEY_SESSION, {
-            expiresIn: "1h",
-          });
-          return res.json({
-            key,
-            token,
-            success: true,
-            email: req.body.email,
-            name: req.body.username,
-            password: req.body.password,
-            cartData: generateCartData(),
-          });
+          cartData: [], // Bao gồm cartData trong phản hồi
         });
+      })
+      .catch((error) => {
+        console.error("Lỗi khi tạo người dùng:", error);
+        return res.status(500).json({
+          error: "Lỗi khi tạo người dùng",
+        });
+      });
     }
   } catch (error) {
-    console.log("error from server when trying to sign up", error);
+    console.error("Lỗi khi kiểm tra email:", error);
+    return res.status(500).json({
+      error: "Lỗi khi kiểm tra email",
+    });
   }
 });
+
+
 
 // creating for user login
 app.post("/login", async (req, res) => {

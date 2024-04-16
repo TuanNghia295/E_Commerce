@@ -33,10 +33,10 @@ const ShopContextProvider = (props) => {
     }
   }, []);
 
-  const addToCart = (itemID) => {
+  const addToCart = async (itemID) => {
     setCartItems((prev) => ({ ...prev, [itemID]: prev[itemID] + 1 }));
     if (localStorage.getItem("Authorization")) {
-      fetch("http://localhost:2905/cart/addtocart", {
+      await fetch("http://localhost:2905/cart/addtocart", {
         method: "POST",
         headers: {
           Accept: "application/data",

@@ -6,7 +6,7 @@ class CartController {
   async getcart(req, res) {
     const userId = req.userId;
     console.log("Get cart");
-    console.log("CarId: \n",userId);
+    console.log("CarId: \n", userId);
     // Đảm bảo rằng userId là một chuỗi hợp lệ
     // ở đây, mục đích của ta là lấy ra cartData hiện có dựa trên
     // userId được gửi từ fetchUser.
@@ -31,21 +31,34 @@ class CartController {
   //   POST /cart/addtocart
   // creating endpoints for addings products in data
   async addtocart(req, res) {
-    console.log("added", req.body.itemID);
+    // find user by key
+    const userId = req.userId;
+    const { itemID } = req.body;
+    console.log("itemId: ", itemID);
 
-    let userData = await Users.findOne({
-      _id: req.user.id,
-    });
-    userData.cartData[req.body.itemID] += 1;
-    await Users.findOneAndUpdate(
-      {
-        _id: req.user.id,
-      },
-      {
-        cartData: userData.cartData,
-      }
-    );
-    res.send("Added");
+    // Thực hiện truy vấn để lấy dữ liệu từ Firebase Realtime Database
+    const userDataRef = fb.ref("users").child(userId).child("cartData");
+    const snapshot = await userDataRef.once("value");
+    let cartData = snapshot.val() || []; // Lấy giá trị của cartData từ snapshot, nếu không tồn tại, trả về một mảng rỗng
+
+    // Thêm một giá trị mới vào mảng cartData
+    const findExistingProduct = cartData.find((item) => item.ID === itemID);
+    console.log("exists", findExistingProduct);
+    if (findExistingProduct) {
+      // tăng quantity lên 1
+      findExistingProduct.quantity += 1;
+      await userDataRef.set(cartData);
+      res.json({ success: true, product_exist: findExistingProduct });
+    } else {
+      const newProduct = {
+        ID: itemID,
+        quantity: 1,
+      };
+      cartData.push(newProduct);
+      //  lưu cartData vào firebase sau khi thêm sản phẩm
+      await userDataRef.set(cartData);
+      res.json({ success: true, added_product: newProduct });
+    }
   }
 
   //   POST /cart/removefromcart
