@@ -1,4 +1,4 @@
-import { useContext, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import classNames from "classnames/bind";
 import styles from "./navbar.module.scss";
 import logo from "../assets/Ecommerce_Frontend_Assets/Assets/nike.png";
@@ -10,8 +10,10 @@ const cx = classNames.bind(styles);
 export const Navbar = () => {
   const [menu, setMenu] = useState("home");
   const { getTotalCartItems } = useContext(ShopContext);
-  const menuRef = useRef();
+  
 
+ 
+  const menuRef = useRef();
   const dropdown_toggle = (e) => {
     menuRef.current.classList.toggle(cx("nav-menu-visible"));
     e.target.classList.toggle(cx("open"));

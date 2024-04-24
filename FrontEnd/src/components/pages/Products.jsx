@@ -12,13 +12,20 @@ const Products = () => {
   const [product, setProduct] = useState(null);
 
   useEffect(() => {
-    const foundProduct = all_product.find((e) => e.pro_code === productId);
-    if (foundProduct) {
-      setProduct(foundProduct);
+    async function getProduct() {
+        const foundProduct = await all_product.find(
+            (e) => e.pro_code === productId
+        );
+        if (foundProduct) {
+            setProduct(foundProduct);
+        }
     }
-  }, [all_product, productId]);
 
-  console.log("product", product);
+    getProduct();
+}, [all_product, productId]);
+
+
+
 
   // Kiểm tra xem dữ liệu đã được tải xong chưa
   if (!all_product.length) {

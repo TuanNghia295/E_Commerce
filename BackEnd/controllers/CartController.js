@@ -22,7 +22,7 @@ class CartController {
       const userData = findUser.val();
       // lấy cartData ra
       const cartData = userData.cartData;
-      res.json({ success: true, cartData });
+      res.json({ success: true, cartData: cartData });
     } else {
       res.json({ success: false, error: "User not found" });
     }
@@ -34,7 +34,6 @@ class CartController {
     // find user by key
     const userId = req.userId;
     const { itemID } = req.body;
-    console.log("itemId: ", itemID);
 
     // Thực hiện truy vấn để lấy dữ liệu từ Firebase Realtime Database
     const userDataRef = fb.ref("users").child(userId).child("cartData");
@@ -48,7 +47,11 @@ class CartController {
       // tăng quantity lên 1
       findExistingProduct.quantity += 1;
       await userDataRef.set(cartData);
-      res.json({ success: true, product_exist: findExistingProduct });
+      res.json({
+        success: true,
+        existed: true,
+        update: findExistingProduct,
+      });
     } else {
       const newProduct = {
         ID: itemID,
@@ -57,29 +60,40 @@ class CartController {
       cartData.push(newProduct);
       //  lưu cartData vào firebase sau khi thêm sản phẩm
       await userDataRef.set(cartData);
-      res.json({ success: true, added_product: newProduct });
+      res.json({ success: true, existed: false, update: newProduct });
     }
   }
 
   //   POST /cart/removefromcart
   // creating endpoints to remove products from cartdata
   async removefromcart(req, res) {
-    console.log("remove", req.body.itemID);
-    let userData = await Users.findOne({
-      _id: req.user.id,
-    });
-    if (userData.cartData[req.body.itemID] > 0) {
-      userData.cartData[req.body.itemID] -= 1;
-    }
-    await Users.findOneAndUpdate(
-      {
-        _id: req.user.id,
-      },
-      {
-        cartData: userData.cartData,
+    const { itemID } = req.body;
+    const userId = req.userId;
+    let userDataRef = fb.ref("users").child(userId).child("cartData");
+
+    try {
+      const snapshot = await userDataRef.once("value");
+      let cartData = snapshot.val() || []; // Lấy giá trị của cartData từ snapshot, nếu không tồn tại, trả về một mảng rỗng
+      // tìm xem itemID có trong database không
+      const findProIndex = await cartData.findIndex(
+        (item) => item.ID === itemID
+      );
+      // tiến hành tạo 1 mảng mới và xóa trong mảng đó. tạo mảng mới để không ảnh hưởng mảng cũ
+      if (findProIndex !== -1) {
+        // Xóa phần từ có item tương ứng từ mảng cartData
+        cartData.splice(findProIndex, 1);
+        // Cập nhật dữ liệu mới nhất vào firebase
+        await userDataRef.set(cartData);
+        res.json({ success: true, newList: cartData });
+      } else {
+        res.json({ success: false, message: "Item not found in cart" });
       }
-    );
-    res.send("Removed");
+    } catch (error) {
+      console.error("Error removing item from cart:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
   }
 }
 

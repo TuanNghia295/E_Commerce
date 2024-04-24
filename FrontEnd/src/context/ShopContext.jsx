@@ -1,17 +1,8 @@
 import { createContext, useEffect, useState } from "react";
 export const ShopContext = createContext(null);
 
-// Cart mặc định với tất cả sản phẩm ở đây sẽ có giá trị là 0
-const getDefaultCart = () => {
-  let cart = {};
-  for (let index = 1; index <= 300; index++) {
-    cart[index] = 0;
-  }
-  return cart;
-};
-
 const ShopContextProvider = (props) => {
-  const [cartItems, setCartItems] = useState(getDefaultCart());
+  const [cartItems, setCartItems] = useState([]);
   const [all_product, setAllProduct] = useState([]);
 
   useEffect(() => {
@@ -29,12 +20,11 @@ const ShopContextProvider = (props) => {
         body: "",
       })
         .then((response) => response.json())
-        .then((data) => setCartItems(data));
+        .then((data) => setCartItems(data.cartData));
     }
   }, []);
 
   const addToCart = async (itemID) => {
-    setCartItems((prev) => ({ ...prev, [itemID]: prev[itemID] + 1 }));
     if (localStorage.getItem("Authorization")) {
       await fetch("http://localhost:2905/cart/addtocart", {
         method: "POST",
@@ -46,14 +36,35 @@ const ShopContextProvider = (props) => {
         body: JSON.stringify({ itemID: itemID }),
       })
         .then((response) => response.json())
-        .then((data) => console.log(data));
+        .then((data) => {
+          console.log(data);
+          if (data.success && data.existed) {
+            const update = data.update;
+            const findItems = cartItems.map((item) => {
+              if (item.ID === update.ID) {
+                item.quantity = update.quantity;
+              }
+              return item;
+            });
+            setCartItems(findItems);
+          } else if (data.success && !data.existed) {
+            if (!cartItems) {
+              setCartItems([data.update]); // Khởi tạo mảng mới nếu cartItems chưa tồn tại
+            } else {
+              setCartItems([...cartItems, { ...data.update }]); // Thêm data.update vào mảng cartItems sử dụng spread
+            }
+          } else {
+            alert("Can not add item into cart");
+          }
+        });
     }
   };
 
-  const removeFromCart = (itemID) => {
+  const removeFromCart = async (itemID) => {
+    console.log("clicked");
     setCartItems((prev) => ({ ...prev, [itemID]: prev[itemID] - 1 }));
-    if (localStorage.getItem("authToken")) {
-      fetch("http://localhost:2905/removefromcart", {
+    if (localStorage.getItem("Authorization")) {
+      await fetch("http://localhost:2905/cart/removefromcart", {
         method: "POST",
         headers: {
           Accept: "application/data",
@@ -63,35 +74,49 @@ const ShopContextProvider = (props) => {
         body: JSON.stringify({ itemID: itemID }),
       })
         .then((response) => response.json())
-        .then((data) => console.log(data));
+        .then((data) => {
+          if(data.success){
+            setCartItems(data.newList)
+          }
+        });
     }
   };
 
   const getTotalCartAmount = () => {
-    // tạo 1 biến để lưu trữ tổng số tiền
-    let totalAmount = 0;
-    // tạo 1 vòng lặp để lặp qua object cartItems
-    // để kiểm tra xem nếu quantity của item đó lớn hơn 0 thì
-    // lấy ra số lượng của sản phẩm đó để nhân với giá tiền
-    for (const i in cartItems) {
-      if (cartItems[i] > 0) {
-        let itemInfo = all_product.find((product) => product.id === Number(i));
-        totalAmount += itemInfo.new_price * cartItems[i];
-      }
-    }
-    return totalAmount;
+    console.log("CartItme",cartItems);
+    // Sử dụng phương thức map() để tạo một mảng mới chứa giá trị tổng tiền của từng sản phẩm trong cartItems
+      const totalAmounts = cartItems.map((cartItem) => {
+        // Tìm sản phẩm có mã trùng với ID của cartItem trong danh sách sản phẩm
+        const foundProduct = all_product.find(
+          (product) => product.pro_code === cartItem.ID
+        );
+  
+        // Nếu tìm thấy sản phẩm và số lượng không âm
+        if (foundProduct && cartItem.quantity >= 0) {
+          // Trả về giá trị tổng tiền cho sản phẩm đó
+          return foundProduct.new_price * cartItem.quantity;
+        } else {
+          // Nếu không tìm thấy sản phẩm hoặc số lượng âm, trả về 0
+          return 0;
+        }
+      });
+  
+      // Tính tổng của tất cả các giá trị tổng tiền trong mảng totalAmounts
+      const totalAmount = totalAmounts.reduce((acc, curr) => acc + curr, 0);
+  
+      // Trả về tổng tiền
+      return totalAmount;
   };
 
   const getTotalCartItems = () => {
-    let totalItem = 0;
-    for (const item in cartItems) {
-      if (cartItems[item] > 0) {
-        // nếu như giá trị của carItems lớn hơn 0
-        // Lấy giá trị đó cộng lại
-        totalItem += cartItems[item];
+    let total = 0;
+    console.log("CartItems", cartItems);
+    for (const i in cartItems) {
+      if (cartItems[i].quantity > 0) {
+        total += cartItems[i].quantity;
       }
     }
-    return totalItem;
+    return total;
   };
 
   const contextValue = {
