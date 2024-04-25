@@ -22,7 +22,7 @@ class CartController {
       const userData = findUser.val();
       // lấy cartData ra
       const cartData = userData.cartData;
-      res.json({ success: true, cartData: cartData });
+      res.json({ success: true, cartData: [] });
     } else {
       res.json({ success: false, error: "User not found" });
     }

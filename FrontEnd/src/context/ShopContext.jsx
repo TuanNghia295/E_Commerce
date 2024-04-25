@@ -62,7 +62,7 @@ const ShopContextProvider = (props) => {
 
   const removeFromCart = async (itemID) => {
     console.log("clicked");
-    setCartItems((prev) => ({ ...prev, [itemID]: prev[itemID] - 1 }));
+    // setCartItems((prev) => ({ ...prev, [itemID]: prev[itemID] - 1 }));
     if (localStorage.getItem("Authorization")) {
       await fetch("http://localhost:2905/cart/removefromcart", {
         method: "POST",
@@ -75,6 +75,7 @@ const ShopContextProvider = (props) => {
       })
         .then((response) => response.json())
         .then((data) => {
+          console.log("data",data);
           if(data.success){
             setCartItems(data.newList)
           }
@@ -83,7 +84,6 @@ const ShopContextProvider = (props) => {
   };
 
   const getTotalCartAmount = () => {
-    console.log("CartItme",cartItems);
     // Sử dụng phương thức map() để tạo một mảng mới chứa giá trị tổng tiền của từng sản phẩm trong cartItems
       const totalAmounts = cartItems.map((cartItem) => {
         // Tìm sản phẩm có mã trùng với ID của cartItem trong danh sách sản phẩm
@@ -92,7 +92,7 @@ const ShopContextProvider = (props) => {
         );
   
         // Nếu tìm thấy sản phẩm và số lượng không âm
-        if (foundProduct && cartItem.quantity >= 0) {
+        if (foundProduct && cartItem.quantity > 0) {
           // Trả về giá trị tổng tiền cho sản phẩm đó
           return foundProduct.new_price * cartItem.quantity;
         } else {
