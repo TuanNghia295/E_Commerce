@@ -7,6 +7,6 @@ admin.initializeApp({
   databaseURL: 'https://lap-trinh-tich-hop-nang-45d37-default-rtdb.firebaseio.com/' 
 });
 
-// Export Firebase Realtime Database để sử dụng ở nơi khác
+// Export Firebase Admin SDK để sử dụng ở nơi khác
 const fb = admin.database();
 module.exports = fb;

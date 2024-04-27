@@ -1,5 +1,4 @@
 const fb = require("../database_connection/firebase");
-const Users = fb.ref("users");
 
 class CartController {
   // POST /cart/getcart
@@ -22,7 +21,8 @@ class CartController {
       const userData = findUser.val();
       // lấy cartData ra
       const cartData = userData.cartData;
-      res.json({ success: true, cartData: [] });
+      console.log("cartData: " , userData);
+      res.json({ success: true, cartData });
     } else {
       res.json({ success: false, error: "User not found" });
     }

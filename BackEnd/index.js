@@ -9,6 +9,8 @@ const router = require("./routes/authRouter");
 const cookieSession = require("cookie-session");
 const passport = require("passport");
 const routes = require("./routes");
+const admin = require("firebase-admin");
+var cookieParser = require('cookie-parser')
 require("dotenv").config();
 require("./config/passport");
 let port = 2905;
@@ -21,6 +23,7 @@ app.use(
     maxAge: 24 * 60 * 60 * 100,
   })
 );
+app.use(cookieParser())
 
 passport.initialize();
 passport.session();
@@ -53,103 +56,187 @@ app.get("/", (req, res) => {
 app.use("/images", express.static("upload/images"));
 
 // Creating endpoint for registering the users
+// app.post("/signUp", async (req, res, next) => {
+//   const { email } = req.body;
+//   try {
+//     const snapshot = await fb
+//       .ref("users")
+//       .orderByChild("email")
+//       .equalTo(email)
+//       .once("value");
+
+//     if (snapshot.exists()) {
+//       return res.status(400).json({
+//         error: "Email đã được sử dụng",
+//       });
+//     } else {
+//       const userRef = fb.ref("users");
+//       userRef
+//         .push({
+//           email: req.body.email,
+//           name: req.body.username,
+//           password: req.body.password,
+//           cartData: [], // Đảm bảo cartData là một mảng rỗng
+//           date: Date.now(),
+//         })
+//         .then((snapshot) => {
+//           const key = snapshot.key;
+
+//           const payload = {
+//             userId: key,
+//           };
+//           const token = jwt.sign(payload, process.env.PRIVATE_KEY_SESSION, {
+//             expiresIn: "1h",
+//           });
+
+//           // Bao gồm cartData trong phản hồi
+//           return res.json({
+//             key,
+//             token,
+//             success: true,
+//             email: req.body.email,
+//             name: req.body.username,
+//             password: req.body.password,
+//             cartData: [], // Bao gồm cartData trong phản hồi
+//           });
+//         })
+//         .catch((error) => {
+//           console.error("Lỗi khi tạo người dùng:", error);
+//           return res.status(500).json({
+//             error: "Lỗi khi tạo người dùng",
+//           });
+//         });
+//     }
+//   } catch (error) {
+//     console.error("Lỗi khi kiểm tra email:", error);
+//     return res.status(500).json({
+//       error: "Lỗi khi kiểm tra email",
+//     });
+//   }
+// });
+
+// creating for user login
+// app.post("/login", async (req, res) => {
+//   const { email, password } = req.body;
+//   const userRef = fb.ref("users");
+
+//   userRef.once("value", (snapshot) => {
+//     if (snapshot.exists()) {
+//       const users = snapshot.val();
+//       // Kiểm tra xem có người dùng nào có email và password khớp với yêu cầu đăng nhập hay không
+//       const userKeys = Object.keys(users);
+//       const foundUserKey = userKeys.find((userKey) => {
+//         const userData = users[userKey];
+//         return userData.email === email && userData.password === password;
+//       });
+
+//       if (foundUserKey) {
+//         const token = jwt.sign(
+//           { userId: foundUserKey },
+//           process.env.PRIVATE_KEY_SESSION,
+//           {
+//             expiresIn: "1h",
+//           }
+//         );
+//         // login success
+//         res
+//           .status(200)
+//           .json({ success: true, message: "Login Successfully", token });
+//       } else {
+//         console.log("Không tìm thấy người dùng");
+//         res
+//           .status(401)
+//           .json({ success: false, error: "Email or password invalid" });
+//       }
+//     } else {
+//       console.log("No data available");
+//       res.status(404).json({ success: false, error: "No data available" });
+//     }
+//   });
+// });
+
 app.post("/signUp", async (req, res, next) => {
-  const { email } = req.body;
   try {
-    const snapshot = await fb
-      .ref("users")
-      .orderByChild("email")
-      .equalTo(email)
-      .once("value");
+    // receive data sent to server by the client
+    const { email, password, displayName } = req.body.userData;
 
-    if (snapshot.exists()) {
+    // Check if data is complete
+    if (!email || !password || !displayName) {
       return res.status(400).json({
-        error: "Email đã được sử dụng",
-      });
-    } else {
-      const userRef = fb.ref("users");
-      userRef.push({
-        email: req.body.email,
-        name: req.body.username,
-        password: req.body.password,
-        cartData: [], // Đảm bảo cartData là một mảng rỗng
-        date: Date.now(),
-      })
-      .then((snapshot) => {
-        const key = snapshot.key;
-
-        const payload = {
-          userId: key,
-        };
-        const token = jwt.sign(payload, process.env.PRIVATE_KEY_SESSION, {
-          expiresIn: "1h",
-        });
-
-        // Bao gồm cartData trong phản hồi
-        return res.json({
-          key,
-          token,
-          success: true,
-          email: req.body.email,
-          name: req.body.username,
-          password: req.body.password,
-          cartData: [], // Bao gồm cartData trong phản hồi
-        });
-      })
-      .catch((error) => {
-        console.error("Lỗi khi tạo người dùng:", error);
-        return res.status(500).json({
-          error: "Lỗi khi tạo người dùng",
-        });
+        success: false,
+        message: "Incomplete data",
       });
     }
+
+    // create account at firebase Authentication
+    const userRecord = await admin.auth().createUser({
+      email,
+      password,
+      displayName,
+    });
+
+    // create user data at firebase Realtime Database
+    const creatUserData = await fb.ref("users").child(userRecord.uid).set({
+      email,
+      displayName,
+      cartData: [],
+    });
+
+    // If creating user data failed, delete the account created in Firebase Authentication
+    if (creatUserData === false) {
+      await admin.auth().deleteUser(userRecord.uid);
+      throw new Error("Failed to create user data");
+    }
+
+    // Retrieve accessToken
+    // user method createCustomToken to create custom token for new user
+    let customToken;
+    try {
+      customToken = await admin.auth().createCustomToken(userRecord.uid);
+    } catch (error) {
+      // If creating custom token failed, delete the account created in Firebase Authentication and Firebase Realtime Database
+      await admin.auth().deleteUser(userRecord.uid);
+      await fb.ref("users").child(userRecord.uid).remove();
+      throw error;
+    }
+
+    // set accessToken into cookie
+    res.cookie("accessToken", customToken, {
+      maxAge: 60 * 60 * 1 * 1000,
+      httpOnly: true,
+    });
+
+    // response to client
+    res.status(200).json({
+      success: true,
+      message: "User account created successfully",
+    });
   } catch (error) {
-    console.error("Lỗi khi kiểm tra email:", error);
-    return res.status(500).json({
-      error: "Lỗi khi kiểm tra email",
+    console.log("Error creating account:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create user account",
+      error: error.message,
     });
   }
 });
 
-
-
-// creating for user login
 app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  const userRef = fb.ref("users");
-
-  userRef.once("value", (snapshot) => {
-    if (snapshot.exists()) {
-      const users = snapshot.val();
-      // Kiểm tra xem có người dùng nào có email và password khớp với yêu cầu đăng nhập hay không
-      const userKeys = Object.keys(users);
-      const foundUserKey = userKeys.find((userKey) => {
-        const userData = users[userKey];
-        return userData.email === email && userData.password === password;
-      });
-
-      if (foundUserKey) {
-        const token = jwt.sign(
-          { userId: foundUserKey },
-          process.env.PRIVATE_KEY_SESSION,
-          {
-            expiresIn: "1h",
-          }
-        );
-        // login success
-        res
-          .status(200)
-          .json({ success: true, message: "Login Successfully", token });
-      } else {
-        console.log("Không tìm thấy người dùng");
-        res
-          .status(401)
-          .json({ success: false, error: "Email or password invalid" });
-      }
-    } else {
-      console.log("No data available");
-      res.status(404).json({ success: false, error: "No data available" });
-    }
+  const userData = req.body.userData;
+  console.log("userData: ", userData.userId);
+  // check exist user data
+  const getDatabase = await fb
+    .ref("users")
+    .child(userData.userId)
+    .once("value");
+  console.log(("getDatabase", getDatabase));
+  console.log("userData", userData);
+  // Trả về phản hồi thành công cho client
+  res.status(200).json({
+    success: true,
+    message: "Received user data successfully",
+    userData,
+    getDatabase,
   });
 });
 
@@ -164,6 +251,8 @@ app.use(
 );
 
 app.use("/", router);
+
+
 
 app.listen(port, (error) => {
   if (!error) {

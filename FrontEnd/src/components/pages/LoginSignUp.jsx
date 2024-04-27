@@ -1,13 +1,13 @@
 import classNames from "classnames/bind";
 import styles from "./scss/loginSignUp.module.scss";
-import { useEffect, useState } from "react";
-import axios from "axios";
-
+import { useState } from "react";
+import auth from "../../config/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
 const cx = classNames.bind(styles);
 const LoginSignUp = () => {
   const [state, setState] = useState("Login");
   const [formData, setFormData] = useState({
-    username: "",
+    displayName: "",
     password: "",
     email: "",
   });
@@ -22,52 +22,85 @@ const LoginSignUp = () => {
   };
 
   const login = async () => {
-    let responseData;
-    const token = localStorage.getItem("Authorization");
-    await fetch("http://localhost:2905/login", {
-      method: "POST",
-      headers: {
-        Accept: "application/form-data",
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token,
-      },
-      body: JSON.stringify(formData),
-    })
-    .then((repsonse) => repsonse.json())
-    .then((data) => (responseData = data));
-    if (responseData.success) {
-      localStorage.setItem("Authorization", responseData.token);
-      window.location.replace("/");
-    } else {
-      alert(responseData.error);
-    }
+    signInWithEmailAndPassword(auth, formData.email, formData.password)
+      .then((userCredential) => {
+        // Signed in
+        const user = userCredential.user;
+        // Lấy thông tin của người dùng
+        const userId = user.uid;
+        const email = user.email;
+        const displayName = user.displayName;
+        const photoURL = user.photoURL;
+        console.log("userInfo", user);
+
+        // gửi thông tin người dùng đến server
+        const userData = { userId, email, displayName, photoURL };
+        fetch("http://localhost:2905/login", {
+          method: "POST",
+          headers: {
+            Accept: "application/form-data",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userData }),
+        })
+          .then((response) => response.json())
+          .then((data) => console.log(data));
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log("error", { errorCode, errorMessage });
+      });
   };
 
+  // const signUp = async () => {
+  //   console.log("signUp", formData);
+  //   let responseData;
+  //   const token = localStorage.getItem("Authorization");
+  //   await fetch("http://localhost:2905/signUp", {
+  //     method: "POST",
+  //     headers: {
+  //       Accept: "application/form-data",
+  //       "Content-Type": "application/json",
+  //       Authorization: "Bearer " + token,
+  //     },
+  //     // sẽ chuyển giá trị object của formData thành dạng JSON chuỗi
+  //     body: JSON.stringify(formData),
+  //   })
+  //     .then((response) => response.json())
+  //     .then((data) => (responseData = data));
+  //   if (responseData.success) {
+  //     localStorage.setItem("Authorization", responseData.token);
+  //     alert("Create account successfully");
+  //     window.location.replace("/");
+  //   } else {
+  //     alert(responseData.error);
+  //   }
+  // };
+
   const signUp = async () => {
-    console.log("signUp", formData);
-    let responseData;
-    const token = localStorage.getItem("Authorization");
+    // Get data in formData
+    const userData = formData;
+    console.log("userData", userData);
     await fetch("http://localhost:2905/signUp", {
       method: "POST",
       headers: {
-        Accept: "application/form-data",
+        Accept: "application/json",
         "Content-Type": "application/json",
-        Authorization: "Bearer " + token,
       },
-      // sẽ chuyển giá trị object của formData thành dạng JSON chuỗi
-      body: JSON.stringify(formData),
+      body: JSON.stringify({ userData }),
+      credentials: "include", // Include credentials
     })
-      .then((response) => response.json())
-      .then((data) => (responseData = data));
-    if (responseData.success) {
-      localStorage.setItem("Authorization", responseData.token);
-      alert("Create account successfully");
-      window.location.replace("/");
-    } else {
-      alert(responseData.error);
-    }
+      .then((response) => {
+        return response.json();
+      })
+      .then((data) => {
+        if (data.success) {
+          alert(data.message);
+          document.location.href ="/"
+        }
+      });
   };
-
   const handleGoogleLogin = () => {
     window.location.href = "http://localhost:2905/auth/google";
   };
@@ -81,8 +114,8 @@ const LoginSignUp = () => {
               type="text"
               onChange={changeHandler}
               placeholder="username"
-              name="username"
-              value={formData.username}
+              name="displayName"
+              value={formData.displayName}
             />
           ) : (
             <></>
