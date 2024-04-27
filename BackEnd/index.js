@@ -10,7 +10,7 @@ const cookieSession = require("cookie-session");
 const passport = require("passport");
 const routes = require("./routes");
 const admin = require("firebase-admin");
-var cookieParser = require('cookie-parser')
+var cookieParser = require("cookie-parser");
 require("dotenv").config();
 require("./config/passport");
 let port = 2905;
@@ -23,7 +23,7 @@ app.use(
     maxAge: 24 * 60 * 60 * 100,
   })
 );
-app.use(cookieParser())
+app.use(cookieParser());
 
 passport.initialize();
 passport.session();
@@ -182,29 +182,10 @@ app.post("/signUp", async (req, res, next) => {
       cartData: [],
     });
 
-    // If creating user data failed, delete the account created in Firebase Authentication
+    // If creating user data failed, send error response to client
     if (creatUserData === false) {
-      await admin.auth().deleteUser(userRecord.uid);
       throw new Error("Failed to create user data");
     }
-
-    // Retrieve accessToken
-    // user method createCustomToken to create custom token for new user
-    let customToken;
-    try {
-      customToken = await admin.auth().createCustomToken(userRecord.uid);
-    } catch (error) {
-      // If creating custom token failed, delete the account created in Firebase Authentication and Firebase Realtime Database
-      await admin.auth().deleteUser(userRecord.uid);
-      await fb.ref("users").child(userRecord.uid).remove();
-      throw error;
-    }
-
-    // set accessToken into cookie
-    res.cookie("accessToken", customToken, {
-      maxAge: 60 * 60 * 1 * 1000,
-      httpOnly: true,
-    });
 
     // response to client
     res.status(200).json({
@@ -222,22 +203,48 @@ app.post("/signUp", async (req, res, next) => {
 });
 
 app.post("/login", async (req, res) => {
-  const userData = req.body.userData;
-  console.log("userData: ", userData.userId);
-  // check exist user data
-  const getDatabase = await fb
-    .ref("users")
-    .child(userData.userId)
-    .once("value");
-  console.log(("getDatabase", getDatabase));
-  console.log("userData", userData);
-  // Trả về phản hồi thành công cho client
-  res.status(200).json({
-    success: true,
-    message: "Received user data successfully",
-    userData,
-    getDatabase,
-  });
+  try {
+    const userData = req.body.userData;
+
+    if (!userData || !userData.userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user data",
+      });
+    }
+
+    console.log("userData: ", userData.userId);
+
+    // check exist user data
+    const snapshot = await fb.ref("users").child(userData.userId).once("value");
+
+    const dbData = snapshot.val();
+
+    if (!dbData) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    console.log("dbData", dbData);
+    console.log("userData", userData);
+
+    // Trả về phản hồi thành công cho client
+    res.status(200).json({
+      success: true,
+      message: "Received user data successfully",
+      userData,
+      dbData,
+    });
+  } catch (error) {
+    console.error("Error querying database:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to query database",
+      error: error.message,
+    });
+  }
 });
 
 // creating for sign in, sign up by Facebook, Google
@@ -251,8 +258,6 @@ app.use(
 );
 
 app.use("/", router);
-
-
 
 app.listen(port, (error) => {
   if (!error) {

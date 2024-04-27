@@ -6,18 +6,28 @@ import cart_icon from "../assets/Ecommerce_Frontend_Assets/Assets/cart_icon.png"
 import { Link } from "react-router-dom";
 import { ShopContext } from "../../context/ShopContext";
 import { IoIosArrowDropdown } from "react-icons/io";
+import * as firebase from "firebase/app";
+import auth from "../../config/firebase";
+
 const cx = classNames.bind(styles);
 export const Navbar = () => {
   const [menu, setMenu] = useState("home");
   const { getTotalCartItems } = useContext(ShopContext);
-  
-
- 
   const menuRef = useRef();
   const dropdown_toggle = (e) => {
     menuRef.current.classList.toggle(cx("nav-menu-visible"));
     e.target.classList.toggle(cx("open"));
   };
+
+  // check user log in or not
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    const userCheck = auth.onAuthStateChanged((user) => {
+      setUser(user);
+    });
+    return () => userCheck();
+  }, []);
+
 
   return (
     <div className={cx("navbar")}>
@@ -74,10 +84,10 @@ export const Navbar = () => {
       </ul>
 
       <div className={cx("nav-login-cart")}>
-        {localStorage.getItem("Authorization") ? (
+        {user ? (
           <button
             onClick={() => {
-              localStorage.removeItem("Authorization");
+              auth.signOut()
               window.location.replace("/");
             }}
           >

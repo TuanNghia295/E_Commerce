@@ -22,35 +22,42 @@ const LoginSignUp = () => {
   };
 
   const login = async () => {
-    signInWithEmailAndPassword(auth, formData.email, formData.password)
-      .then((userCredential) => {
-        // Signed in
-        const user = userCredential.user;
-        // Lấy thông tin của người dùng
-        const userId = user.uid;
-        const email = user.email;
-        const displayName = user.displayName;
-        const photoURL = user.photoURL;
-        console.log("userInfo", user);
-
-        // gửi thông tin người dùng đến server
-        const userData = { userId, email, displayName, photoURL };
-        fetch("http://localhost:2905/login", {
-          method: "POST",
-          headers: {
-            Accept: "application/form-data",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ userData }),
-        })
-          .then((response) => response.json())
-          .then((data) => console.log(data));
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log("error", { errorCode, errorMessage });
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      // Signed in
+      const user = userCredential.user;
+      // Lấy thông tin của người dùng
+      const userId = user.uid;
+      const email = user.email;
+      const displayName = user.displayName;
+      const photoURL = user.photoURL;
+      console.log("userInfo", user);
+  
+      // gửi thông tin người dùng đến server
+      const userData = { userId, email, displayName, photoURL };
+      const response = await fetch("http://localhost:2905/login", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userData }),
       });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      if(data.success){
+        alert(data.message)
+        document.location.href = "/"
+      }
+    } catch (error) {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      console.log("error", { errorCode, errorMessage });
+    }
   };
 
   // const signUp = async () => {
@@ -82,24 +89,34 @@ const LoginSignUp = () => {
     // Get data in formData
     const userData = formData;
     console.log("userData", userData);
-    await fetch("http://localhost:2905/signUp", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ userData }),
-      credentials: "include", // Include credentials
-    })
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
-        if (data.success) {
-          alert(data.message);
-          document.location.href ="/"
-        }
+  
+    try {
+      const response = await fetch("http://localhost:2905/signUp", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userData }),
+        credentials: "include", // Include credentials
       });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+  
+      if (data.success) {
+        alert(data.message);
+        document.location.href ="/"
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error("An error occurred while signing up:", error);
+      alert("An error occurred while signing up. Please try again.");
+    }
   };
   const handleGoogleLogin = () => {
     window.location.href = "http://localhost:2905/auth/google";
