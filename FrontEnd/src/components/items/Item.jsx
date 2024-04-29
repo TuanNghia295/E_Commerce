@@ -16,8 +16,8 @@ const Item = ({ id, image, name, new_price, old_price }) => {
       </Link>
       <p>{name}</p>
       <div className={cx("item-prices")}>
-        <div className={cx("item-price-new")}>${new_price}</div>
-        <div className={cx("item-price-old")}>${old_price}</div>
+        <div className={cx("item-price-new")}>${new_price.toLocaleString()}</div>
+        <div className={cx("item-price-old")}>${old_price.toLocaleString()}</div>
       </div>
     </div>
   );

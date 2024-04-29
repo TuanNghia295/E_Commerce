@@ -227,8 +227,12 @@ app.post("/login", async (req, res) => {
       });
     }
 
-    console.log("dbData", dbData);
-    console.log("userData", userData);
+    // tạo token jwt
+    const token = jwt.sign(
+      { userId: userData.userId },
+      process.env.PRIVATE_KEY_SESSION,
+      { expiresIn: "1h" }
+    );
 
     // Trả về phản hồi thành công cho client
     res.status(200).json({
@@ -236,6 +240,7 @@ app.post("/login", async (req, res) => {
       message: "Received user data successfully",
       userData,
       dbData,
+      token
     });
   } catch (error) {
     console.error("Error querying database:", error);

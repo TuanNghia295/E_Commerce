@@ -10,11 +10,12 @@ require("dotenv").config()
 // Ở đây hàm sẽ trả về đúng tài khoản cần tìm bằng việc verify token
 const fetchUser = async (req,res,next)=>{
   const token = req.headers['authorization']
+  console.log("token",token);
   if(token){
     // verify token để lấy ra key của user là userId
     // từ userId này, ta gửi nó ngược lại cho client hoặc xử lý tiếp trong server
     // với các hàm như get cart, add to cart,...
-    const userInfo = jwt.verify(token,process.env.PRIVATE_KEY_SESSION)
+    const userInfo = jwt.verify(token.replace('Bearer ', ''),process.env.PRIVATE_KEY_SESSION)
     console.log("user info: \n",userInfo);
    
     // lưu userId vào req object

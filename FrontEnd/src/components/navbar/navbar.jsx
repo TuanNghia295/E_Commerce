@@ -6,7 +6,6 @@ import cart_icon from "../assets/Ecommerce_Frontend_Assets/Assets/cart_icon.png"
 import { Link } from "react-router-dom";
 import { ShopContext } from "../../context/ShopContext";
 import { IoIosArrowDropdown } from "react-icons/io";
-import * as firebase from "firebase/app";
 import auth from "../../config/firebase";
 
 const cx = classNames.bind(styles);
@@ -20,14 +19,15 @@ export const Navbar = () => {
   };
 
   // check user log in or not
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(false);
   useEffect(() => {
-    const userCheck = auth.onAuthStateChanged((user) => {
-      setUser(user);
-    });
+    const userCheck = ()=>{
+      const token = localStorage.getItem("authToken");
+      setUser(!!token)
+    }
     return () => userCheck();
   }, []);
-
+  
 
   return (
     <div className={cx("navbar")}>
@@ -87,7 +87,8 @@ export const Navbar = () => {
         {user ? (
           <button
             onClick={() => {
-              auth.signOut()
+              auth.signOut();
+              localStorage.removeItem("authToken")
               window.location.replace("/");
             }}
           >

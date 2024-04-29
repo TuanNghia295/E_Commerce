@@ -4,8 +4,6 @@ class CartController {
   // POST /cart/getcart
   async getcart(req, res) {
     const userId = req.userId;
-    console.log("Get cart");
-    console.log("CarId: \n", userId);
     // Đảm bảo rằng userId là một chuỗi hợp lệ
     // ở đây, mục đích của ta là lấy ra cartData hiện có dựa trên
     // userId được gửi từ fetchUser.
@@ -21,7 +19,6 @@ class CartController {
       const userData = findUser.val();
       // lấy cartData ra
       const cartData = userData.cartData;
-      console.log("cartData: " , userData);
       res.json({ success: true, cartData });
     } else {
       res.json({ success: false, error: "User not found" });

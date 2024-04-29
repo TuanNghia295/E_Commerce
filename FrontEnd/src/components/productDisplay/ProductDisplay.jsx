@@ -6,20 +6,31 @@ import { useContext } from "react";
 import { ShopContext } from "../../context/ShopContext";
 
 const cx = classNames.bind(styles);
+
 const ProductDisplay = ({ product }) => {
   const { addToCart } = useContext(ShopContext);
+  const productImage = product.image.replace(";", "");
+
+  const renderStars = () => {
+    let stars = [];
+    for (let i = 0; i < 4; i++) {
+      stars.push(<img key={i} src={star_icon} alt="" />);
+    }
+    stars.push(<img key={5} src={star_dull_icon} alt="" />);
+    return stars;
+  };
+
   return (
     <div className={cx("productDisplay")}>
-      <div className={cx("productDisplay-left"   )}>
+      <div className={cx("productDisplay-left")}>
         <div className={cx("productDisplay-img-list")}>
-          <img src={product.image.replace(";","")} alt="" />
-          <img src={product.image.replace(";","")} alt="" />
-          <img src={product.image.replace(";","")} alt="" />
-          <img src={product.image.replace(";","")} alt="" />
+          {[...Array(4)].map((_, i) => (
+            <img key={i} src={productImage} alt="" />
+          ))}
         </div>
         <div className={cx("productDisplay-img")}>
           <img
-            src={product.image.replace(";","")}
+            src={productImage}
             className={cx("productDisplay-main-img")}
             alt=""
           />
@@ -28,19 +39,15 @@ const ProductDisplay = ({ product }) => {
       <div className={cx("productDisplay-right")}>
         <h1>{product.name}</h1>
         <div className={cx("productDisplay-right-stars")}>
-          <img src={star_icon} alt="" />
-          <img src={star_icon} alt="" />
-          <img src={star_icon} alt="" />
-          <img src={star_icon} alt="" />
-          <img src={star_dull_icon} alt="" />
+          {renderStars()}
           <p>(122)</p>
         </div>
         <div className={cx("productDisplay-right-prices")}>
           <div className={cx("productDisplay-right-price-old")}>
-            ${product.old_price}
+            ${product.old_price.toLocaleString()}
           </div>
           <div className={cx("productDisplay-right-price-new")}>
-            ${product.new_price}
+            ${product.new_price.toLocaleString()}
           </div>
         </div>
         <div className={cx("productDisplay-description")}>
@@ -59,12 +66,6 @@ const ProductDisplay = ({ product }) => {
             <div>XXL</div>
           </div>
           <button onClick={() => addToCart(product.pro_code)}>ADD TO CART</button>
-          {/* <p className={cx("productDisplay-category")}>
-            <span>Category :</span> Women, T-shirt, Crop top
-          </p>
-          <p className={cx("productDisplay-category")}>
-            <span>Tags :</span> Modern, Latest
-          </p> */}
         </div>
       </div>
     </div>

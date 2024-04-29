@@ -6,15 +6,18 @@ const ShopContextProvider = (props) => {
   const [all_product, setAllProduct] = useState([]);
 
   useEffect(() => {
+    const token = localStorage.getItem("authToken");
     fetch("http://localhost:2905/allProducts")
       .then((response) => response.json())
       .then((data) => setAllProduct(data));
-    if (localStorage.getItem("Authorization")) {
+
+    // use currentUser method to get current user information
+    if (token) {
       fetch("http://localhost:2905/cart/getcart", {
         method: "POST",
         headers: {
           Accept: "application/form-data",
-          Authorization: `${localStorage.getItem("Authorization")}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: "",
@@ -25,12 +28,12 @@ const ShopContextProvider = (props) => {
   }, []);
 
   const addToCart = async (itemID) => {
-    if (localStorage.getItem("Authorization")) {
+    if (localStorage.getItem("authToken")) {
       await fetch("http://localhost:2905/cart/addtocart", {
         method: "POST",
         headers: {
           Accept: "application/data",
-          Authorization: `${localStorage.getItem("Authorization")}`,
+          Authorization: `${localStorage.getItem("authToken")}`,
           "Content-type": "application/json",
         },
         body: JSON.stringify({ itemID: itemID }),
@@ -63,61 +66,72 @@ const ShopContextProvider = (props) => {
   const removeFromCart = async (itemID) => {
     console.log("clicked");
     // setCartItems((prev) => ({ ...prev, [itemID]: prev[itemID] - 1 }));
-    if (localStorage.getItem("Authorization")) {
+    if (localStorage.getItem("authToken")) {
       await fetch("http://localhost:2905/cart/removefromcart", {
         method: "POST",
         headers: {
           Accept: "application/data",
-          Authorization: `${localStorage.getItem("Authorization")}`,
+          Authorization: `${localStorage.getItem("authToken")}`,
           "Content-type": "application/json",
         },
         body: JSON.stringify({ itemID: itemID }),
       })
         .then((response) => response.json())
         .then((data) => {
-          console.log("data",data);
-          if(data.success){
-            setCartItems(data.newList)
+          console.log("data", data);
+          if (data.success) {
+            // Kiểm tra xem newList có rỗng không trước khi cập nhật cartItems
+            if (data.newList && data.newList.length > 0) {
+              setCartItems(data.newList);
+            } else {
+              setCartItems([]);
+            }
           }
         });
     }
   };
 
   const getTotalCartAmount = () => {
+    if(!cartItems){
+      return 0
+    }
     // Sử dụng phương thức map() để tạo một mảng mới chứa giá trị tổng tiền của từng sản phẩm trong cartItems
-      const totalAmounts = cartItems.map((cartItem) => {
-        // Tìm sản phẩm có mã trùng với ID của cartItem trong danh sách sản phẩm
-        const foundProduct = all_product.find(
-          (product) => product.pro_code === cartItem.ID
-        );
-  
-        // Nếu tìm thấy sản phẩm và số lượng không âm
-        if (foundProduct && cartItem.quantity > 0) {
-          // Trả về giá trị tổng tiền cho sản phẩm đó
-          return foundProduct.new_price * cartItem.quantity;
-        } else {
-          // Nếu không tìm thấy sản phẩm hoặc số lượng âm, trả về 0
-          return 0;
-        }
-      });
-  
-      // Tính tổng của tất cả các giá trị tổng tiền trong mảng totalAmounts
-      const totalAmount = totalAmounts.reduce((acc, curr) => acc + curr, 0);
-  
-      // Trả về tổng tiền
-      return totalAmount;
+    const totalAmounts = cartItems.map((cartItem) => {
+      // Tìm sản phẩm có mã trùng với ID của cartItem trong danh sách sản phẩm
+      const foundProduct = all_product.find(
+        (product) => product.pro_code === cartItem.ID
+      );
+
+      // Nếu tìm thấy sản phẩm và số lượng không âm
+      if (foundProduct && cartItem.quantity > 0) {
+        // Trả về giá trị tổng tiền cho sản phẩm đó
+        return foundProduct.new_price * cartItem.quantity;
+      } else {
+        // Nếu không tìm thấy sản phẩm hoặc số lượng âm, trả về 0
+        return 0;
+      }
+    });
+
+    // Tính tổng của tất cả các giá trị tổng tiền trong mảng totalAmounts
+    const totalAmount = totalAmounts.reduce((acc, curr) => acc + curr, 0);
+
+    // Trả về tổng tiền
+    return totalAmount;
   };
 
   const getTotalCartItems = () => {
-    let total = 0;
-    console.log("CartItems", cartItems);
-    for (const i in cartItems) {
-      if (cartItems[i].quantity > 0) {
-        total += cartItems[i].quantity;
-      }
+  let total = 0;
+  let addedProductIds = {};
+
+  for (const i in cartItems) {
+    if (cartItems[i].quantity > 0 && !addedProductIds[cartItems[i].ID]) {
+      total += 1;
+      addedProductIds[cartItems[i].ID] = true;
     }
-    return total;
-  };
+  }
+
+  return total;
+};
 
   const contextValue = {
     all_product,

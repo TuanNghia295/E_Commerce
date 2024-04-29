@@ -23,7 +23,11 @@ const LoginSignUp = () => {
 
   const login = async () => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
       // Signed in
       const user = userCredential.user;
       // Lấy thông tin của người dùng
@@ -31,8 +35,10 @@ const LoginSignUp = () => {
       const email = user.email;
       const displayName = user.displayName;
       const photoURL = user.photoURL;
-      console.log("userInfo", user);
-  
+
+      //  lấy token
+      const token = localStorage.getItem("authToken");
+
       // gửi thông tin người dùng đến server
       const userData = { userId, email, displayName, photoURL };
       const response = await fetch("http://localhost:2905/login", {
@@ -40,22 +46,25 @@ const LoginSignUp = () => {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({ userData }),
       });
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
+
       const data = await response.json();
-      if(data.success){
-        alert(data.message)
-        document.location.href = "/"
+      if (data.success) {
+        localStorage.setItem("authToken", data.token);
+        alert(data.message);
+        document.location.href = "/";
       }
     } catch (error) {
       const errorCode = error.code;
       const errorMessage = error.message;
+      alert(errorMessage);
       console.log("error", { errorCode, errorMessage });
     }
   };
@@ -89,7 +98,7 @@ const LoginSignUp = () => {
     // Get data in formData
     const userData = formData;
     console.log("userData", userData);
-  
+
     try {
       const response = await fetch("http://localhost:2905/signUp", {
         method: "POST",
@@ -100,16 +109,16 @@ const LoginSignUp = () => {
         body: JSON.stringify({ userData }),
         credentials: "include", // Include credentials
       });
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
+
       const data = await response.json();
-  
+
       if (data.success) {
         alert(data.message);
-        document.location.href ="/"
+        document.location.href = "/";
       } else {
         alert(data.message);
       }

@@ -25,7 +25,6 @@ const CartItems = () => {
         }
       }
       setList(newList);
-      console.log("list", list);
     }
   }, [cartItems]);
 
@@ -56,7 +55,7 @@ const CartItems = () => {
                     className={cx("cartIcon-product-icon")}
                   />
                   <p>{item.name}</p>
-                  <p>${item.new_price}</p>
+                  <p>${item.new_price.toLocaleString()}</p>
                   <button className={cx("cartItem-quantity")}>
                     {cartItems.map((pro) => {
                       if (pro.ID === item.pro_code) {
@@ -68,7 +67,7 @@ const CartItems = () => {
                     $
                     {cartItems.map((pro) => {
                       if (pro.ID === item.pro_code) {
-                        return pro.quantity * item.new_price;
+                        return (pro.quantity * item.new_price).toLocaleString();
                       }
                     })}
                   </p>
@@ -90,7 +89,7 @@ const CartItems = () => {
             <div>
               <div className={cx("cartItems-total-item")}>
                 <p>Subtotal</p>
-                <p>${getTotalCartAmount()}</p>
+                <p>${getTotalCartAmount().toLocaleString()}</p>
               </div>
               <hr />
               <div className={cx("cartItems-total-item")}>
@@ -100,7 +99,7 @@ const CartItems = () => {
               <hr />
               <div className={cx("cartItems-total-item")}>
                 <h3>Total</h3>
-                <h3>${getTotalCartAmount()}</h3>
+                <h3>${getTotalCartAmount().toLocaleString()}</h3>
               </div>
             </div>
 
