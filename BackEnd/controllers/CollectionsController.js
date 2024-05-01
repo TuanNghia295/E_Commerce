@@ -6,7 +6,6 @@ class CollectionsController {
   async newcollections(req, res) {
     let products = await Product.find({});
     let newCollections = products.slice(1).slice(-8);
-    console.log("newCollections", newCollections);
     res.send(newCollections);
   }
 

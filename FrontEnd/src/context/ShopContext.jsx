@@ -5,25 +5,40 @@ const ShopContextProvider = (props) => {
   const [cartItems, setCartItems] = useState([]);
   const [all_product, setAllProduct] = useState([]);
 
-  useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    fetch("http://localhost:2905/allProducts")
-      .then((response) => response.json())
-      .then((data) => setAllProduct(data));
+  // biến kiểm tra trạng thái token
+  const [tokenExpired,setTokenExpired] = useState(false)
 
-    // use currentUser method to get current user information
-    if (token) {
-      fetch("http://localhost:2905/cart/getcart", {
-        method: "POST",
-        headers: {
-          Accept: "application/form-data",
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: "",
-      })
+  // hàm kiểm tra token hết hạn hay chưa
+  const isTokenExpired = () => {
+    const token = localStorage.getItem("authToken");
+    if (!token) return true;
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.exp < Date.now() / 1000;
+  };
+  useEffect(() => {
+    if (isTokenExpired()) {
+      localStorage.removeItem("authToken");
+      setTokenExpired(true)
+    } else {
+      fetch("http://localhost:2905/allProducts")
         .then((response) => response.json())
-        .then((data) => setCartItems(data.cartData));
+        .then((data) => setAllProduct(data));
+
+      const token = localStorage.getItem("authToken");
+      // use currentUser method to get current user information
+      if (token) {
+        fetch("http://localhost:2905/cart/getcart", {
+          method: "POST",
+          headers: {
+            Accept: "application/form-data",
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: "",
+        })
+          .then((response) => response.json())
+          .then((data) => setCartItems(data.cartData));
+      }
     }
   }, []);
 
@@ -40,7 +55,7 @@ const ShopContextProvider = (props) => {
       })
         .then((response) => response.json())
         .then((data) => {
-          console.log(data);
+          // console.log(data);
           if (data.success && data.existed) {
             const update = data.update;
             const findItems = cartItems.map((item) => {
@@ -64,7 +79,6 @@ const ShopContextProvider = (props) => {
   };
 
   const removeFromCart = async (itemID) => {
-    console.log("clicked");
     // setCartItems((prev) => ({ ...prev, [itemID]: prev[itemID] - 1 }));
     if (localStorage.getItem("authToken")) {
       await fetch("http://localhost:2905/cart/removefromcart", {
@@ -78,7 +92,7 @@ const ShopContextProvider = (props) => {
       })
         .then((response) => response.json())
         .then((data) => {
-          console.log("data", data);
+          // console.log("data", data);
           if (data.success) {
             // Kiểm tra xem newList có rỗng không trước khi cập nhật cartItems
             if (data.newList && data.newList.length > 0) {
@@ -92,8 +106,8 @@ const ShopContextProvider = (props) => {
   };
 
   const getTotalCartAmount = () => {
-    if(!cartItems){
-      return 0
+    if (!cartItems) {
+      return 0;
     }
     // Sử dụng phương thức map() để tạo một mảng mới chứa giá trị tổng tiền của từng sản phẩm trong cartItems
     const totalAmounts = cartItems.map((cartItem) => {
@@ -120,18 +134,18 @@ const ShopContextProvider = (props) => {
   };
 
   const getTotalCartItems = () => {
-  let total = 0;
-  let addedProductIds = {};
+    let total = 0;
+    let addedProductIds = {};
 
-  for (const i in cartItems) {
-    if (cartItems[i].quantity > 0 && !addedProductIds[cartItems[i].ID]) {
-      total += 1;
-      addedProductIds[cartItems[i].ID] = true;
+    for (const i in cartItems) {
+      if (cartItems[i].quantity > 0 && !addedProductIds[cartItems[i].ID]) {
+        total += 1;
+        addedProductIds[cartItems[i].ID] = true;
+      }
     }
-  }
 
-  return total;
-};
+    return total;
+  };
 
   const contextValue = {
     all_product,
@@ -140,6 +154,7 @@ const ShopContextProvider = (props) => {
     removeFromCart,
     getTotalCartAmount,
     getTotalCartItems,
+    tokenExpired
   };
 
   return (

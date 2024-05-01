@@ -2,15 +2,26 @@ import classNames from "classnames/bind";
 import styles from "./productDisplay.module.scss";
 import star_icon from "../assets/Ecommerce_Frontend_Assets/Assets/star_icon.png";
 import star_dull_icon from "../assets/Ecommerce_Frontend_Assets/Assets/star_dull_icon.png";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { ShopContext } from "../../context/ShopContext";
 
 const cx = classNames.bind(styles);
 
 const ProductDisplay = ({ product }) => {
   const { addToCart } = useContext(ShopContext);
+  const [isAddedToCart, setIsAddedToCart] = useState(false);
   const productImage = product.image.replace(";", "");
 
+  // hàm kiểm soát trạng thái thêm sản phẩm
+  const handleAddToCart = (pro_code) => {
+    addToCart(pro_code);
+    setIsAddedToCart(true);
+    setTimeout(() => {
+      setIsAddedToCart(false);
+    }, 3000);
+  };
+
+  // Hiện ra ngôi sao
   const renderStars = () => {
     let stars = [];
     for (let i = 0; i < 4; i++) {
@@ -65,7 +76,14 @@ const ProductDisplay = ({ product }) => {
             <div>XL</div>
             <div>XXL</div>
           </div>
-          <button onClick={() => addToCart(product.pro_code)}>ADD TO CART</button>
+          <button onClick={() => handleAddToCart(product.pro_code)}>
+            ADD TO CART
+          </button>
+          {isAddedToCart && (
+            <div className={cx("productDisplay-notification")}>
+              Product added to cart!
+            </div>
+          )}
         </div>
       </div>
     </div>

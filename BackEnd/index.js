@@ -212,9 +212,6 @@ app.post("/login", async (req, res) => {
         message: "Invalid user data",
       });
     }
-
-    console.log("userData: ", userData.userId);
-
     // check exist user data
     const snapshot = await fb.ref("users").child(userData.userId).once("value");
 
@@ -237,7 +234,7 @@ app.post("/login", async (req, res) => {
     // Trả về phản hồi thành công cho client
     res.status(200).json({
       success: true,
-      message: "Received user data successfully",
+      message: "login successfully",
       userData,
       dbData,
       token

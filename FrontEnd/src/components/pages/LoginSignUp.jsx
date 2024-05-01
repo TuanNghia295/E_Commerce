@@ -64,7 +64,7 @@ const LoginSignUp = () => {
     } catch (error) {
       const errorCode = error.code;
       const errorMessage = error.message;
-      alert(errorMessage);
+      alert("Password or email invalid");
       console.log("error", { errorCode, errorMessage });
     }
   };
