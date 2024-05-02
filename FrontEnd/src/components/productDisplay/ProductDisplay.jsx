@@ -11,14 +11,19 @@ const ProductDisplay = ({ product }) => {
   const { addToCart } = useContext(ShopContext);
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const productImage = product.image.replace(";", "");
-
+  const [toogleLogin, setToogleLogin] = useState(false);
   // hàm kiểm soát trạng thái thêm sản phẩm
   const handleAddToCart = (pro_code) => {
-    addToCart(pro_code);
-    setIsAddedToCart(true);
-    setTimeout(() => {
-      setIsAddedToCart(false);
-    }, 3000);
+    if (localStorage.getItem("authToken")) {
+      addToCart(pro_code);
+      setIsAddedToCart(true);
+      setTimeout(() => {
+        setIsAddedToCart(false);
+      }, 3000);
+    } else {
+      console.log("click");
+      setToogleLogin(!toogleLogin);
+    }
   };
 
   // Hiện ra ngôi sao
@@ -79,6 +84,35 @@ const ProductDisplay = ({ product }) => {
           <button onClick={() => handleAddToCart(product.pro_code)}>
             ADD TO CART
           </button>
+          {toogleLogin && (
+            <>
+              <div
+                className={cx("cartItems-modal-overlay")}
+                onClick={()=>setToogleLogin(false)}
+              ></div>
+              <div className={cx("cartItems-modal")}>
+                <h2>You Have To Login</h2>
+                <div className={cx("cartItems-modal-box")}>
+                  <div className={cx("cartItems-modal-button")}>
+                    <div
+                      className={cx("login-btn")}
+                      onClick={() => (document.location.href = "/login")}
+                    >
+                      Login
+                    </div>
+                  </div>
+                  <div className={cx("cartItems-modal-button")}>
+                    <div
+                      className={cx("cancel-btn")}
+                      onClick={() => setToogleLogin(false)}
+                    >
+                      CANCEL
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
           {isAddedToCart && (
             <div className={cx("productDisplay-notification")}>
               Product added to cart!

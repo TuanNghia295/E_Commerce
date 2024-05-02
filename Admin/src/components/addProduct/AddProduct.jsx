@@ -10,6 +10,10 @@ const AddProduct = () => {
     category: "women",
     new_price: "",
     old_price: "",
+    color: "",
+    size: [],
+    description: "",
+    quantity: "",
   });
 
   const imageHandler = (e) => {
@@ -17,12 +21,13 @@ const AddProduct = () => {
   };
 
   const changeHandler = (e) => {
-    setProductDetails({
-      ...productDetails,
-      [e.target.pro_code]: [e.target.value],
-      [e.target.name]: e.target.value,
-    });
-  };
+    const { name, value } = e.target;
+      setProductDetails({
+        ...productDetails,
+        [e.target.pro_code]: [e.target.value],
+        [name]: value,
+      });
+    }
 
   const addProduct = async () => {
     console.log(productDetails);
@@ -126,6 +131,54 @@ const AddProduct = () => {
           <option value="men">Man</option>
           <option value="kid">Kid</option>
         </select>
+      </div>
+
+      <div className="addProduct-item-field">
+        <p>Product color</p>
+        <input
+          value={productDetails.color}
+          onChange={changeHandler}
+          type="text"
+          name="color"
+          id=""
+          placeholder="Type here"
+        />
+      </div>
+
+      <div className="addProduct-item-field">
+        <p>Product size</p>
+        <input
+          value={productDetails.size}
+          onChange={changeHandler}
+          type="text"
+          name="size"
+          id=""
+          placeholder="41,42,43,..."
+        />
+      </div>
+
+      <div className="addProduct-item-field">
+        <p>Product description</p>
+        <input
+          value={productDetails.description}
+          onChange={changeHandler}
+          type="text"
+          name="description"
+          id=""
+          placeholder="Type here"
+        />
+      </div>
+
+      <div className="addProduct-item-field">
+        <p>Product quantity</p>
+        <input
+          value={productDetails.quantity}
+          onChange={changeHandler}
+          type="text"
+          name="quantity"
+          id=""
+          placeholder="Type here"
+        />
       </div>
 
       <div className="addProduct-item-field">

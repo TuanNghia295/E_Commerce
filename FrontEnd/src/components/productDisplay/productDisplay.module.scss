@@ -116,6 +116,74 @@
     animation: slide 0.5s forwards;
 }
 
+.cartItems-modal {
+    z-index: 100;
+    background-color: #ffffff;
+    color: #333333;
+    position: fixed;
+    flex-direction: column;
+    text-align: center;
+    display: flex;
+    height: 250px;
+    width: 400px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px; // Thêm padding cho modal
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25); // Thêm bóng cho modal
+    border-radius: 32px
+}
+
+.cartItems-modal-overlay {
+    z-index: 99;
+    background-color: rgba(0, 0, 0, 0.5); // Màu đen với độ trong suốt 50%
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.cartItems-modal-button {
+    width: 100%;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0;
+
+    div {
+        width: 80%;
+        padding: 10px;
+        text-align: center;
+        font-weight: 600;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .login-btn {
+        background-color: #4CAF50;
+        color: white;
+
+        &:hover {
+            background-color: #409a43;
+            color: white;
+        }
+    }
+
+    .cancel-btn {
+        background-color: #f44336;
+        color: white;
+
+        &:hover {
+            background-color: #db3d31;
+            color: white;
+        }
+    }
+}
+
+
+
 @keyframes slide {
     0% {
         transform: translateX(100%);

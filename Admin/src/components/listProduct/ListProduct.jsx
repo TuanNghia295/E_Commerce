@@ -64,7 +64,6 @@ const ListProduct = () => {
                   onClick={() => removeProduct(pro_code)}
                 />
               </div>
-              ;
               <hr />
             </div>
           );

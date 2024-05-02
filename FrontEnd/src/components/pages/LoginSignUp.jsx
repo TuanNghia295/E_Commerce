@@ -46,7 +46,7 @@ const LoginSignUp = () => {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ userData }),
       });
@@ -59,7 +59,11 @@ const LoginSignUp = () => {
       if (data.success) {
         localStorage.setItem("authToken", data.token);
         alert(data.message);
-        document.location.href = "/";
+        if (email === "admin@gmail.com" && formData.password === "qweasd") {
+          document.location.href = "http://localhost:5174";
+        } else {
+          document.location.href = "/";
+        }
       }
     } catch (error) {
       const errorCode = error.code;
@@ -68,31 +72,6 @@ const LoginSignUp = () => {
       console.log("error", { errorCode, errorMessage });
     }
   };
-
-  // const signUp = async () => {
-  //   console.log("signUp", formData);
-  //   let responseData;
-  //   const token = localStorage.getItem("Authorization");
-  //   await fetch("http://localhost:2905/signUp", {
-  //     method: "POST",
-  //     headers: {
-  //       Accept: "application/form-data",
-  //       "Content-Type": "application/json",
-  //       Authorization: "Bearer " + token,
-  //     },
-  //     // sẽ chuyển giá trị object của formData thành dạng JSON chuỗi
-  //     body: JSON.stringify(formData),
-  //   })
-  //     .then((response) => response.json())
-  //     .then((data) => (responseData = data));
-  //   if (responseData.success) {
-  //     localStorage.setItem("Authorization", responseData.token);
-  //     alert("Create account successfully");
-  //     window.location.replace("/");
-  //   } else {
-  //     alert(responseData.error);
-  //   }
-  // };
 
   const signUp = async () => {
     // Get data in formData

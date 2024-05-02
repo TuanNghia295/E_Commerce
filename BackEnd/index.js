@@ -205,7 +205,7 @@ app.post("/signUp", async (req, res, next) => {
 app.post("/login", async (req, res) => {
   try {
     const userData = req.body.userData;
-
+    console.log("userData",userData);
     if (!userData || !userData.userId) {
       return res.status(400).json({
         success: false,

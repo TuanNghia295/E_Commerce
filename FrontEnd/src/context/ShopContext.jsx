@@ -6,7 +6,7 @@ const ShopContextProvider = (props) => {
   const [all_product, setAllProduct] = useState([]);
 
   // biến kiểm tra trạng thái token
-  const [tokenExpired,setTokenExpired] = useState(false)
+  const [tokenExpired, setTokenExpired] = useState(false);
 
   // hàm kiểm tra token hết hạn hay chưa
   const isTokenExpired = () => {
@@ -16,14 +16,14 @@ const ShopContextProvider = (props) => {
     return payload.exp < Date.now() / 1000;
   };
   useEffect(() => {
+    fetch("http://localhost:2905/allProducts")
+      .then((response) => response.json())
+      .then((data) => setAllProduct(data));
+
     if (isTokenExpired()) {
       localStorage.removeItem("authToken");
-      setTokenExpired(true)
+      setTokenExpired(true);
     } else {
-      fetch("http://localhost:2905/allProducts")
-        .then((response) => response.json())
-        .then((data) => setAllProduct(data));
-
       const token = localStorage.getItem("authToken");
       // use currentUser method to get current user information
       if (token) {
@@ -154,7 +154,7 @@ const ShopContextProvider = (props) => {
     removeFromCart,
     getTotalCartAmount,
     getTotalCartItems,
-    tokenExpired
+    tokenExpired,
   };
 
   return (

@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import Item from "../items/Item";
 import { ShopContext } from "../../context/ShopContext";
 import dropdown_icon from "../assets/Ecommerce_Frontend_Assets/Assets/dropdown_icon.png";
@@ -7,7 +7,9 @@ import styles from "./scss/shopCategory.module.scss";
 const cx = classNames.bind(styles);
 const ShopCategory = ({ banner, categories }) => {
   const { all_product } = useContext(ShopContext);
-  console.log("men all product",all_product);
+  useEffect(()=>{
+    console.log("all_product",all_product);
+  },[])
   return (
     <div className={cx("shop-category")}>
       <img className={cx("shopcategory-banner")} src={banner} alt="" />

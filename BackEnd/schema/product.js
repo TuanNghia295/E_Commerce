@@ -4,7 +4,7 @@ const Product = mongoose.model("Product", {
   pro_code: {
     type: String,
     required: true,
-    unique:true
+    unique: true,
   },
   name: {
     type: String,
@@ -26,14 +26,29 @@ const Product = mongoose.model("Product", {
     type: Number,
     required: true,
   },
+  quantity: {
+    type: Number,
+    required: true,
+  },
+  description: {
+    type: String,
+  },
   date: {
     type: Date,
     default: Date.now(),
   },
-  available: {
-    type: Boolean,
-    default: true,
+  color: {
+    type: String,
+    required: true,
   },
+  size: {
+    type: [String],
+    required: true,
+  },
+  // available: {
+  //   type: Boolean,
+  //   default: true,
+  // },
 });
 
 module.exports = Product;
