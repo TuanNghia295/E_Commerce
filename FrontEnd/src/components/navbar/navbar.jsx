@@ -1,33 +1,45 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState, useCallback } from "react";
 import classNames from "classnames/bind";
 import styles from "./navbar.module.scss";
 import logo from "../assets/Ecommerce_Frontend_Assets/Assets/nike.png";
 import cart_icon from "../assets/Ecommerce_Frontend_Assets/Assets/cart_icon.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ShopContext } from "../../context/ShopContext";
 import { IoIosArrowDropdown } from "react-icons/io";
 import auth from "../../config/firebase";
+import Tippy from "@tippyjs/react/headless";
+import "tippy.js/dist/tippy.css"; // include tippy's CSS
 
 const cx = classNames.bind(styles);
 export const Navbar = () => {
   const [menu, setMenu] = useState("home");
   const { getTotalCartItems } = useContext(ShopContext);
   const menuRef = useRef();
-  const dropdown_toggle = (e) => {
+  const navigate = useNavigate();
+  const [dropdown, setDropdown] = useState(false);
+
+  const dropdown_toggle = useCallback((e) => {
     menuRef.current.classList.toggle(cx("nav-menu-visible"));
     e.target.classList.toggle(cx("open"));
-  };
+  }, []);
 
   // check user log in or not
   const [user, setUser] = useState(false);
   useEffect(() => {
-    const userCheck = ()=>{
+    const userCheck = () => {
       const token = localStorage.getItem("authToken");
-      setUser(!!token)
-    }
-    return () => userCheck();
+      setUser(!!token);
+    };
+    userCheck();
   }, []);
-  
+
+  const handleLogout = () => {
+    auth.signOut();
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("displayName");
+    setUser(false);
+    document.location.href = "/";
+  };
 
   return (
     <div className={cx("navbar")}>
@@ -85,19 +97,27 @@ export const Navbar = () => {
 
       <div className={cx("nav-login-cart")}>
         {user ? (
-          <button
-            onClick={() => {
-              auth.signOut();
-              localStorage.removeItem("authToken")
-              window.location.replace("/");
-            }}
+          <Tippy
+            interactive={true}
+            visible={dropdown}
+            render={(attrs) => (
+              <div {...attrs}>
+                <ul>
+                  <li>
+                    <button onClick={handleLogout}>Logout</button>
+                  </li>
+                </ul>
+              </div>
+            )}
           >
-            Logout
-          </button>
+            <button onClick={() => setDropdown(!dropdown)}>
+              {localStorage.getItem("displayName")}
+            </button>
+          </Tippy>
         ) : (
-          <Link to={"/login"}>
-            <button>Login</button>
-          </Link>
+          <div className={cx("nav-login-cart")}>
+            <button onClick={() => navigate("/login")}>Login</button>
+          </div>
         )}
 
         <Link to={"/cart"}>

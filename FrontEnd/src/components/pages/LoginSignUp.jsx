@@ -56,8 +56,10 @@ const LoginSignUp = () => {
       }
 
       const data = await response.json();
+      console.log("data");
       if (data.success) {
         localStorage.setItem("authToken", data.token);
+        localStorage.setItem("displayName", data.dbData.displayName);
         alert(data.message);
         if (email === "admin@gmail.com" && formData.password === "qweasd") {
           document.location.href = "http://localhost:5174";
