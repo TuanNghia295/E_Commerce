@@ -205,7 +205,7 @@ app.post("/signUp", async (req, res, next) => {
 app.post("/login", async (req, res) => {
   try {
     const userData = req.body.userData;
-    console.log("userData",userData);
+    console.log("userData", userData);
     if (!userData || !userData.userId) {
       return res.status(400).json({
         success: false,
@@ -231,13 +231,15 @@ app.post("/login", async (req, res) => {
       { expiresIn: "1h" }
     );
 
+    // lưu token vào database
+    await fb.ref("users").child(userData.userId).update({ token });
+
     // Trả về phản hồi thành công cho client
     res.status(200).json({
       success: true,
       message: "login successfully",
-      userData,
-      dbData,
-      token
+      token,
+      isAdmin: dbData.email === "admin@gmail.com" && dbData.password === "qweasd"
     });
   } catch (error) {
     console.error("Error querying database:", error);
@@ -258,6 +260,14 @@ app.use(
     saveUninitialized: true,
   })
 );
+
+app.get("/userInfo", async (req, res) => {
+  const token = req.headers.authorization.split(" ")[1];
+  const userId = jwt.verify(token, process.env.PRIVATE_KEY_SESSION).userId;
+  const snapshot = await fb.ref("users").child(userId).once("value");
+  const userData = snapshot.val();
+  res.status(200).json(userData); 
+});
 
 app.use("/", router);
 

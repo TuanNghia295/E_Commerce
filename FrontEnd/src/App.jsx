@@ -12,6 +12,7 @@ import women_banner from "./components/assets/Ecommerce_Frontend_Assets/Assets/b
 import kid_banner from "./components/assets/Ecommerce_Frontend_Assets/Assets/banner_kids.png";
 import { useContext, useEffect } from "react";
 import { ShopContext } from "./context/ShopContext";
+import Profile from "./components/profile/Profile.jsx";
 
 function App() {
   const { tokenExpired } = useContext(ShopContext);
@@ -47,6 +48,7 @@ function App() {
             element={tokenExpired ? <Navigate to={"/login"} /> : <Cart />}
           ></Route>
           <Route path="/login" element={<LoginSignUp />}></Route>
+          <Route path="/profile" element={<Profile/>}></Route>
         </Routes>
         <Footer />
       </BrowserRouter>

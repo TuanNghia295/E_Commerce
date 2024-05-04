@@ -35,10 +35,7 @@ const LoginSignUp = () => {
       const email = user.email;
       const displayName = user.displayName;
       const photoURL = user.photoURL;
-
-      //  lấy token
-      const token = localStorage.getItem("authToken");
-
+  
       // gửi thông tin người dùng đến server
       const userData = { userId, email, displayName, photoURL };
       const response = await fetch("http://localhost:2905/login", {
@@ -46,22 +43,29 @@ const LoginSignUp = () => {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ userData }),
       });
-
+  
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
+  
       const data = await response.json();
-      console.log("data");
       if (data.success) {
+        // lưu token
         localStorage.setItem("authToken", data.token);
-        localStorage.setItem("displayName", data.dbData.displayName);
+  
+        // lấy thông tin người dùng từ server
+        const userInfo = await fetch("http://localhost:2905/userInfo", {
+          headers: {
+            Authorization: `Bearer ${data.token}`,
+          },
+        });
+        const user = await userInfo.json();
+        localStorage.setItem("displayName", user.displayName);
         alert(data.message);
-        if (email === "admin@gmail.com" && formData.password === "qweasd") {
+        if (user.isAdmin) {
           document.location.href = "http://localhost:5174";
         } else {
           document.location.href = "/";

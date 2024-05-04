@@ -9,7 +9,9 @@ import { IoIosArrowDropdown } from "react-icons/io";
 import auth from "../../config/firebase";
 import Tippy from "@tippyjs/react/headless";
 import "tippy.js/dist/tippy.css"; // include tippy's CSS
-
+import { CiUser } from "react-icons/ci";
+import { CgProfile } from "react-icons/cg";
+import { IoIosLogOut } from "react-icons/io";
 const cx = classNames.bind(styles);
 export const Navbar = () => {
   const [menu, setMenu] = useState("home");
@@ -36,16 +38,39 @@ export const Navbar = () => {
   const handleLogout = () => {
     auth.signOut();
     localStorage.removeItem("authToken");
-    localStorage.removeItem("displayName");
     setUser(false);
     document.location.href = "/";
   };
 
+  const handleProfile = () => {
+    setDropdown(false)
+    navigate("/profile");
+  };
+
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutSide = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdown(false);
+      }
+    };
+    if (dropdown) {
+      document.addEventListener("mousedown", handleClickOutSide);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutSide);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutSide);
+    };
+  }, [dropdown]);
+
   return (
     <div className={cx("navbar")}>
       <div className={cx("nav-logo")}>
-        <Link to={"/"}>
-          <img src={logo} alt="" srcSet="" height="100" width="100" />
+        <Link to={"/"} onClick={()=>setMenu("home")}>
+          <img src={logo}alt="" srcSet="" height="100" width="100" />
         </Link>
       </div>
 
@@ -98,20 +123,41 @@ export const Navbar = () => {
       <div className={cx("nav-login-cart")}>
         {user ? (
           <Tippy
-            interactive={true}
             visible={dropdown}
+            interactive={true}
             render={(attrs) => (
-              <div {...attrs}>
-                <ul>
-                  <li>
-                    <button onClick={handleLogout}>Logout</button>
+              <div {...attrs} ref={dropdownRef}>
+                <ul className={cx("nav-dropdownList")}>
+                  <li
+                    className={cx("nav-dropdownItems")}
+                    onClick={handleProfile}
+                  >
+                    <span className={cx("nav-dropItemsIcons")}>
+                      <CgProfile />
+                    </span>
+                    <p>Profile</p>
+                  </li>
+                  <li
+                    className={cx("nav-dropdownItems")}
+                    onClick={handleLogout}
+                  >
+                    <span className={cx("nav-dropItemsIcons")}>
+                      <IoIosLogOut />
+                    </span>
+                    <p>Logout</p>
                   </li>
                 </ul>
               </div>
             )}
           >
-            <button onClick={() => setDropdown(!dropdown)}>
-              {localStorage.getItem("displayName")}
+            <button
+              className={cx("square-btn")}
+              onClick={() => setDropdown(!dropdown)}
+            >
+              <div className={cx("user-icon")}>
+                <CiUser />
+              </div>
+              <p> {localStorage.getItem("displayName")}</p>
             </button>
           </Tippy>
         ) : (
