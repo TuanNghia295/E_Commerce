@@ -1,29 +1,14 @@
 import classNames from "classnames/bind";
 import styles from "./Profile.module.scss";
-import { useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import auth from "../../config/firebase";
 import RightSection from "./RightSection";
+import { ShopContext } from "../../context/ShopContext";
 const cx = classNames.bind(styles);
 
 function Profile() {
-  const [user, setUser] = useState(null);
   const [menu, setMenu] = useState("Personal Information");
-
-  useEffect(() => {
-    const userData = async () => {
-      const token = localStorage.getItem("authToken");
-      if (token) {
-        const response = await fetch("http://localhost:2905/userInfo", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const userInfo = await response.json();
-        setUser(userInfo);
-      }
-    };
-    userData();
-  }, []);
+  const { user } = useContext(ShopContext);
 
   const handleLogout = () => {
     setMenu("logOut");
@@ -32,8 +17,6 @@ function Profile() {
     localStorage.removeItem("displayName");
     document.location.href = "/";
   };
-
-  const handleChangeEmail = () => {};
 
   return (
     <div className={cx("container")}>
@@ -96,21 +79,29 @@ function Profile() {
                   <h1>ADDRESS DETAILS</h1>
                 </div>
                 <RightSection
+                  type={"address"}
                   value={
                     <div className={cx("addressInfo-container")}>
                       <div className={cx("addressInfo-section")}>
-                        <div>FullName:</div>
-                        <span className={cx("fullName-val")}> Null</span>
+                        <strong>FullName: </strong>
+                        <span className={cx("fullName-val")}>
+                          {user.fullName}
+                        </span>
                       </div>
 
                       <div className={cx("addressInfo-section")}>
-                        <div>Address:</div>
-                        <span className={cx("fullName-val")}> Null</span>
+                        <strong>Address:</strong>
+                        <span className={cx("fullName-val")}>
+                          {user.address}
+                        </span>
                       </div>
 
                       <div className={cx("addressInfo-section")}>
-                        <div>Phone Numbers:</div>
-                        <span className={cx("fullName-val")}> Null</span>
+                        <strong>Phone Number:</strong>
+                        <span className={cx("fullName-val")}>
+                          {" "}
+                          {user.phoneNumber}
+                        </span>
                       </div>
                     </div>
                   }
@@ -121,8 +112,16 @@ function Profile() {
                 <div className={cx("right-section-header")}>
                   <h1>LOGIN DETAILS</h1>
                 </div>
-                <RightSection detail="EMAIL" type={"email"} value={user.email} />
-                <RightSection detail="PASSWORD" value="********" />
+                <RightSection
+                  detail="EMAIL"
+                  type={"email"}
+                  value={user.email}
+                />
+                <RightSection
+                  detail="PASSWORD"
+                  type={"password"}
+                  value="********"
+                />
               </div>
             )}
           </div>

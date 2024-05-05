@@ -119,5 +119,10 @@
 }
 
 .addressInfo-section{
+    display: flex;
     padding: 20px;
+
+    strong{
+        min-width: 150px;
+    }
 }

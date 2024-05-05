@@ -3,6 +3,7 @@ import styles from "./scss/loginSignUp.module.scss";
 import { useState } from "react";
 import auth from "../../config/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { useDebounce } from "use-debounce";
 const cx = classNames.bind(styles);
 const LoginSignUp = () => {
   const [state, setState] = useState("Login");
@@ -11,6 +12,9 @@ const LoginSignUp = () => {
     password: "",
     email: "",
   });
+
+  const [debounceEmail] = useDebounce(formData.email, 500);
+  const [debounceDisplayName] = useDebounce(formData.displayName, 500);
 
   const changeHandler = (e) => {
     // sử dụng spread để tạo ra bản sao của formData. từ đó thay đổi giá trị trong bản sao đó
@@ -35,7 +39,7 @@ const LoginSignUp = () => {
       const email = user.email;
       const displayName = user.displayName;
       const photoURL = user.photoURL;
-  
+
       // gửi thông tin người dùng đến server
       const userData = { userId, email, displayName, photoURL };
       const response = await fetch("http://localhost:2905/login", {
@@ -46,16 +50,16 @@ const LoginSignUp = () => {
         },
         body: JSON.stringify({ userData }),
       });
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
+
       const data = await response.json();
       if (data.success) {
         // lưu token
         localStorage.setItem("authToken", data.token);
-  
+
         // lấy thông tin người dùng từ server
         const userInfo = await fetch("http://localhost:2905/userInfo", {
           headers: {
@@ -64,10 +68,11 @@ const LoginSignUp = () => {
         });
         const user = await userInfo.json();
         localStorage.setItem("displayName", user.displayName);
-        alert(data.message);
-        if (user.isAdmin) {
+        if (user.role === "admin") {
+          alert(data.message);
           document.location.href = "http://localhost:5174";
         } else {
+          alert(data.message);
           document.location.href = "/";
         }
       }
@@ -81,7 +86,11 @@ const LoginSignUp = () => {
 
   const signUp = async () => {
     // Get data in formData
-    const userData = formData;
+    const userData = {
+      ...formData,
+      email: debounceEmail,
+      displayName: debounceDisplayName,
+    };
     console.log("userData", userData);
 
     try {

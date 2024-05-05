@@ -3,21 +3,18 @@ import styles from "./Profile.module.scss";
 import Modal from "../modal/modal";
 import { useState } from "react";
 
-function RightSection({ detail, type, value, onEdit }) {
-  const cx = classNames.bind(styles);
-  const [isModalOpen, setIsModalOpen] = useState(false); // New state to control the visibility of the modal
-
-  const handleEdit = () => {
-    setIsModalOpen(true);
-    if (onEdit) {
-      onEdit();
+const cx = classNames.bind(styles);
+function RightSection({ detail, type, value }) {
+  const [openModal, setOpenModal] = useState(false);
+  const handelOpenModal = () => {
+    if (type) {
+      setOpenModal(!openModal);
     }
+    return false;
   };
-
-  const handleClose = () => {
-    setIsModalOpen(false);
+  const handleCloseModal = () => {
+    setOpenModal(false);
   };
-
   return (
     <>
       <div className={cx("right-section-details")}>
@@ -26,12 +23,35 @@ function RightSection({ detail, type, value, onEdit }) {
           <div>{value}</div>
         </div>
         <div className={cx("right-section-edit")}>
-          <button className={cx("edit-btn")} onClick={handleEdit}>
+          <button className={cx("edit-btn")} onClick={handelOpenModal}>
             EDIT
           </button>
         </div>
       </div>
-      <Modal type={type} title={"Email"} modalOpen={isModalOpen} onClose={handleClose} />
+      {type === "email" && (
+        <Modal
+          title={"Update Email"}
+          type={"email"}
+          modalOpen={openModal}
+          onClose={handleCloseModal}
+        />
+      )}
+      {type === "password" && (
+        <Modal
+          title={"Update PassWord"}
+          type={"password"}
+          modalOpen={openModal}
+          onClose={handleCloseModal}
+        />
+      )}
+      {type === "address" && (
+        <Modal
+          title={"Update Address Infor"}
+          type={"address"}
+          modalOpen={openModal}
+          onClose={handleCloseModal}
+        />
+      )}
     </>
   );
 }

@@ -4,6 +4,7 @@ export const ShopContext = createContext(null);
 const ShopContextProvider = (props) => {
   const [cartItems, setCartItems] = useState([]);
   const [all_product, setAllProduct] = useState([]);
+  const [user, setUser] = useState(null);
 
   // biến kiểm tra trạng thái token
   const [tokenExpired, setTokenExpired] = useState(false);
@@ -15,6 +16,8 @@ const ShopContextProvider = (props) => {
     const payload = JSON.parse(atob(token.split(".")[1]));
     return payload.exp < Date.now() / 1000;
   };
+
+  // lấy ra tất cả sản phẩm
   useEffect(() => {
     fetch("http://localhost:2905/allProducts")
       .then((response) => response.json())
@@ -41,6 +44,24 @@ const ShopContextProvider = (props) => {
       }
     }
   }, []);
+
+  // lấy ra thông tin người dùng
+  useEffect(() => {
+    const userData = async () => {
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        const response = await fetch("http://localhost:2905/userInfo", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const userInfo = await response.json();
+        setUser(userInfo);
+      }
+    };
+    userData();
+  }, []);
+
 
   const addToCart = async (itemID) => {
     if (localStorage.getItem("authToken")) {
@@ -155,6 +176,7 @@ const ShopContextProvider = (props) => {
     getTotalCartAmount,
     getTotalCartItems,
     tokenExpired,
+    user
   };
 
   return (

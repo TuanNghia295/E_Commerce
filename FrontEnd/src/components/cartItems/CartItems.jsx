@@ -5,18 +5,12 @@ import { ShopContext } from "../../context/ShopContext";
 import remove_icon from "../assets/Ecommerce_Frontend_Assets/Assets/cart_cross_icon.png";
 const cx = classNames.bind(styles);
 const CartItems = () => {
-  const { all_product, cartItems, getTotalCartAmount, removeFromCart } =
+  const { all_product, cartItems, getTotalCartAmount, removeFromCart, user } =
     useContext(ShopContext);
   const [list, setList] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
-  const [userInfo, setUserInfo] = useState({
-    fullname: "",
-    phone: "",
-    address: "",
-    promocode: "",
-  });
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
@@ -26,9 +20,6 @@ const CartItems = () => {
     setIsRemoveModalOpen(!isRemoveModalOpen);
   };
 
-  const handleInputChange = (event) => {
-    setUserInfo({ ...userInfo, [event.target.name]: event.target.value });
-  };
   useEffect(() => {
     const newList = [];
     if (cartItems === undefined) {
@@ -137,83 +128,50 @@ const CartItems = () => {
           return null;
         })}
         <div className={cx("cartItems-down")}>
-          <div className={cx("cartItems-total")}>
-            <h1>Cart Totals</h1>
-            <div>
-              <div className={cx("cartItems-total-item")}>
-                <p>Full Name</p>
-                <p>{userInfo.fullname}</p>
-              </div>
-              <hr />
+          {user ? (
+            <div className={cx("cartItems-total")}>
+              <h1>Cart Totals</h1>
+              <div>
+                <div className={cx("cartItems-total-item")}>
+                  <p>Full Name</p>
+                  <p>{user.fullName}</p>
+                </div>
+                <hr />
 
-              <div className={cx("cartItems-total-item")}>
-                <p>Phone Number</p>
-                <p>{userInfo.phone}</p>
-              </div>
-              <hr />
+                <div className={cx("cartItems-total-item")}>
+                  <p>Phone Number</p>
+                  <p>{user.phoneNumber}</p>
+                </div>
+                <hr />
 
-              <div className={cx("cartItems-total-item")}>
-                <p>Address</p>
-                <p>{userInfo.address}</p>
+                <div className={cx("cartItems-total-item")}>
+                  <p>Address</p>
+                  <p>{user.address}</p>
+                </div>
+                <hr />
+                <div className={cx("cartItems-total-item")}>
+                  <p>Subtotal</p>
+                  <p>${getTotalCartAmount().toLocaleString()}</p>
+                </div>
+                <hr />
+                <div className={cx("cartItems-total-item")}>
+                  <p>Shipping fee</p>
+                  <p>Free</p>
+                </div>
+                <hr />
+                <div className={cx("cartItems-total-item")}>
+                  <h3>Total</h3>
+                  <h3>${getTotalCartAmount().toLocaleString()}</h3>
+                </div>
               </div>
-              <hr />
-              <div className={cx("cartItems-total-item")}>
-                <p>Subtotal</p>
-                <p>${getTotalCartAmount().toLocaleString()}</p>
-              </div>
-              <hr />
-              <div className={cx("cartItems-total-item")}>
-                <p>Shipping fee</p>
-                <p>Free</p>
-              </div>
-              <hr />
-              <div className={cx("cartItems-total-item")}>
-                <h3>Total</h3>
-                <h3>${getTotalCartAmount().toLocaleString()}</h3>
-              </div>
+              <button onClick={toggleModal} className={cx("proceed-btn")}>
+                PROCEED TO CHECKOUT
+              </button>
             </div>
-            <button onClick={toggleModal} className={cx("proceed-btn")}>
-              PROCEED TO CHECKOUT
-            </button>
-          </div>
-          <div className={cx("cartItems-information")}>
-            <h1>Information</h1>
-            <div className={cx("cartItems-infobox")}>
-              <input
-                type="text"
-                placeholder="Full Name"
-                name="fullname"
-                id="fullname"
-                value={userInfo.fullname}
-                onChange={handleInputChange}
-              />
-              <input
-                type="text"
-                placeholder="Phone Number"
-                name="phone"
-                id="phone"
-                value={userInfo.phone}
-                onChange={handleInputChange}
-              />
-              <input
-                type="text"
-                placeholder="Address"
-                name="address"
-                id="address"
-                value={userInfo.address}
-                onChange={handleInputChange}
-              />
-              <input
-                type="text"
-                placeholder="Promo Code (optional)"
-                name="promocode"
-                id="promocode"
-                value={userInfo.promocode}
-                onChange={handleInputChange}
-              />
-              <button>Submit</button>
-            </div>
-          </div>
+          ) : (
+            <p>Loading...</p>
+          )}
+
           {isModalOpen && (
             <>
               <div

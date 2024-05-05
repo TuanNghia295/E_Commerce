@@ -20,14 +20,27 @@
     width: 100%;
 }
 
+.Modal-content-section{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-top: 20px;
+    label{
+        width: 200px;
+    }
+}
+
 .Modal-content input {
+    gap: 40px;
     padding: 10px;
-    margin-bottom: 20px;
+    width: 100%;
+    margin-left: 20px;
     border-radius: 5px;
     border: 1px solid #ccc;
 }
 
 .Modal-options {
+    margin-top: 20px;
     display: flex;
     justify-content: space-between;
 }

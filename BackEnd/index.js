@@ -234,12 +234,20 @@ app.post("/login", async (req, res) => {
     // lưu token vào database
     await fb.ref("users").child(userData.userId).update({ token });
 
+    // kiểm tra coi có phải tài khoản admin không trên authentication firebase
+    if (dbData.role === "admin") {
+      return res.json({
+        success: true,
+        isAdmin: true,
+        token,
+        message: "welcome admin !",
+      });
+    }
     // Trả về phản hồi thành công cho client
     res.status(200).json({
       success: true,
       message: "login successfully",
       token,
-      isAdmin: dbData.email === "admin@gmail.com" && dbData.password === "qweasd"
     });
   } catch (error) {
     console.error("Error querying database:", error);
@@ -266,7 +274,7 @@ app.get("/userInfo", async (req, res) => {
   const userId = jwt.verify(token, process.env.PRIVATE_KEY_SESSION).userId;
   const snapshot = await fb.ref("users").child(userId).once("value");
   const userData = snapshot.val();
-  res.status(200).json(userData); 
+  res.status(200).json(userData);
 });
 
 app.use("/", router);
