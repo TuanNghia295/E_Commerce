@@ -62,7 +62,6 @@ const ShopContextProvider = (props) => {
     userData();
   }, []);
 
-
   const addToCart = async (itemID) => {
     if (localStorage.getItem("authToken")) {
       await fetch("http://localhost:2905/cart/addtocart", {
@@ -126,6 +125,25 @@ const ShopContextProvider = (props) => {
     }
   };
 
+  const removeAllFromCart = async () => {
+    const token = localStorage.getItem("authToken");
+    const response = await fetch(
+      "http://localhost:2905/cart/removeAllFromCart",
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          Authorization: `${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(),
+      }
+    );
+
+    const data = await response.json();
+    console.log("removed", data);
+  };
+
   const getTotalCartAmount = () => {
     if (!cartItems) {
       return 0;
@@ -170,13 +188,15 @@ const ShopContextProvider = (props) => {
 
   const contextValue = {
     all_product,
+    setCartItems,
     cartItems,
     addToCart,
     removeFromCart,
+    removeAllFromCart,
     getTotalCartAmount,
     getTotalCartItems,
     tokenExpired,
-    user
+    user,
   };
 
   return (

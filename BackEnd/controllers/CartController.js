@@ -1,5 +1,6 @@
 const fb = require("../database_connection/firebase");
-
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 class CartController {
   // POST /cart/getcart
   async getcart(req, res) {
@@ -90,6 +91,57 @@ class CartController {
       res
         .status(500)
         .json({ success: false, message: "Internal server error" });
+    }
+  }
+
+  async removeAllFromCart(req, res) {
+    // Check if the Authorization header is provided
+    console.log(req.headers.authorization);
+    if (!req.headers.authorization) {
+      return res
+        .status(401)
+        .json({ success: false, message: "No token provided" });
+    }
+
+    const token = req.headers.authorization;
+    console.log("totken", token);
+    try {
+      // Check if the token is provided
+      if (!token) {
+        return res
+          .status(401)
+          .json({ success: false, message: "No token provided" });
+      }
+
+      const userId = jwt.verify(token, process.env.PRIVATE_KEY_SESSION).userId;
+
+      // Check if the userId is provided
+      if (!userId) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Invalid token" });
+      }
+
+      const userRecordSnapshot = await fb.ref("users").child(userId).get();
+
+      // Check if the user exists
+      if (!userRecordSnapshot.exists()) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+
+      // Update the cartData field to an empty array
+      await fb.ref("users").child(userId).update({ cartData: [] });
+
+      return res.json({ success: true, message: "Cart cleared successfully" });
+    } catch (error) {
+      console.error("Error removing items from cart:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Could not clear cart",
+        error: error.message,
+      });
     }
   }
 }

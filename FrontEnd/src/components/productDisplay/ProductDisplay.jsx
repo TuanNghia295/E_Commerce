@@ -2,7 +2,7 @@ import classNames from "classnames/bind";
 import styles from "./productDisplay.module.scss";
 import star_icon from "../assets/Ecommerce_Frontend_Assets/Assets/star_icon.png";
 import star_dull_icon from "../assets/Ecommerce_Frontend_Assets/Assets/star_dull_icon.png";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { ShopContext } from "../../context/ShopContext";
 
 const cx = classNames.bind(styles);
@@ -12,19 +12,29 @@ const ProductDisplay = ({ product }) => {
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const productImage = product.image.replace(";", "");
   const [toogleLogin, setToogleLogin] = useState(false);
+  const [timeoutId, setTimeoutId] = useState(null);
   // hàm kiểm soát trạng thái thêm sản phẩm
   const handleAddToCart = (pro_code) => {
     if (localStorage.getItem("authToken")) {
       addToCart(pro_code);
       setIsAddedToCart(true);
-      setTimeout(() => {
+      const id = setTimeout(() => {
         setIsAddedToCart(false);
-      }, 3000);
+      }, 1000);
+      setTimeoutId(id);
     } else {
       console.log("click");
       setToogleLogin(!toogleLogin);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [timeoutId]);
 
   // Hiện ra ngôi sao
   const renderStars = () => {
@@ -88,7 +98,7 @@ const ProductDisplay = ({ product }) => {
             <>
               <div
                 className={cx("cartItems-modal-overlay")}
-                onClick={()=>setToogleLogin(false)}
+                onClick={() => setToogleLogin(false)}
               ></div>
               <div className={cx("cartItems-modal")}>
                 <h2>You Have To Login</h2>

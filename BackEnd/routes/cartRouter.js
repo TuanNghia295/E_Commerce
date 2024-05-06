@@ -32,5 +32,6 @@ const fetchUser = async (req, res, next) => {
 router.post("/getcart", fetchUser, cartController.getcart);
 router.post("/addtocart", fetchUser, cartController.addtocart);
 router.post("/removefromcart", fetchUser, cartController.removefromcart);
+router.post("/removeAllFromCart", fetchUser, cartController.removeAllFromCart);
 
 module.exports = router;
