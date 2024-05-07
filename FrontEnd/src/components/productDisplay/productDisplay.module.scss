@@ -182,7 +182,16 @@
     }
 }
 
-
+.selected {
+    background-color: #007BFF;
+    /* Change to your preferred color */
+    color: red;
+    /* Change to your preferred color */
+    border-radius: 5px;
+    /* Optional: to make the size box rounded */
+    padding: 5px;
+    /* Optional: to add some space around the size text */
+}
 
 @keyframes slide {
     0% {

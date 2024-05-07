@@ -1,5 +1,6 @@
 const fb = require("../database_connection/firebase");
 const jwt = require("jsonwebtoken");
+const Product = require("../schema/product");
 require("dotenv").config();
 class CartController {
   // POST /cart/getcart
@@ -31,15 +32,20 @@ class CartController {
   async addtocart(req, res) {
     // find user by key
     const userId = req.userId;
-    const { itemID } = req.body;
+    const { itemID, size } = req.body;
 
     // Thực hiện truy vấn để lấy dữ liệu từ Firebase Realtime Database
     const userDataRef = fb.ref("users").child(userId).child("cartData");
     const snapshot = await userDataRef.once("value");
     let cartData = snapshot.val() || []; // Lấy giá trị của cartData từ snapshot, nếu không tồn tại, trả về một mảng rỗng
 
+    // lấy thông tin sản phẩm từ database
+    const productData = await Product.findOne({pro_code: itemID});
+
     // Thêm một giá trị mới vào mảng cartData
-    const findExistingProduct = cartData.find((item) => item.ID === itemID);
+    const findExistingProduct = cartData.find(
+      (item) => item.ID === itemID && item.size === size
+    );
     console.log("exists", findExistingProduct);
     if (findExistingProduct) {
       // tăng quantity lên 1
@@ -52,8 +58,10 @@ class CartController {
       });
     } else {
       const newProduct = {
+        ...productData._doc,
         ID: itemID,
         quantity: 1,
+        size: size,
       };
       cartData.push(newProduct);
       //  lưu cartData vào firebase sau khi thêm sản phẩm
@@ -134,7 +142,7 @@ class CartController {
       // Update the cartData field to an empty array
       await fb.ref("users").child(userId).update({ cartData: [] });
 
-      return res.json({ success: true, message: "Cart cleared successfully" });
+      return res.json({ success: true, message: "Cart cleared successfully" , newCart:[] });
     } catch (error) {
       console.error("Error removing items from cart:", error);
       return res.status(500).json({

@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import "./listProduct.css";
 import { CiSquareRemove } from "react-icons/ci";
+import { Link } from "react-router-dom";
+import { CiEdit } from "react-icons/ci";
+
 const ListProduct = () => {
   const [allProducts, setAllProducts] = useState([]);
 
@@ -41,6 +44,7 @@ const ListProduct = () => {
         <p>new Price</p>
         <p>Category</p>
         <p>Remove</p>
+        <p>Edit</p>
       </div>
       <div className="listProduct-allProduct">
         <hr />
@@ -63,6 +67,15 @@ const ListProduct = () => {
                   className="listProduct-removeIcon"
                   onClick={() => removeProduct(pro_code)}
                 />
+                <Link
+                  to={`/editProduct/${pro_code}`}
+                  className="link-items"
+                  style={{ textDecoration: "none" }}
+                >
+                  <div className="edit-btn">
+                    <CiEdit />
+                  </div>
+                </Link>
               </div>
               <hr />
             </div>

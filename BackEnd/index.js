@@ -233,7 +233,6 @@ app.post("/login", async (req, res) => {
 
     // lưu token vào database
     await fb.ref("users").child(userData.userId).update({ token });
-
     // kiểm tra coi có phải tài khoản admin không trên authentication firebase
     if (dbData.role === "admin") {
       return res.json({
@@ -278,7 +277,6 @@ app.get("/userInfo", async (req, res) => {
 });
 
 app.use("/", router);
-
 
 app.listen(port, (error) => {
   if (!error) {

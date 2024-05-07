@@ -55,6 +55,51 @@ class ProductController {
       name: req.body.name,
     });
   }
+
+  // GET /product
+  async getProduct(req, res) {
+    const { id } = req.params;
+    console.log("id",id);
+    try {
+      const product = await Product.findOne({ pro_code: id });
+      if (!product) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Product not found" });
+      } else {
+        res.json({ success: true, product });
+      }
+    } catch (error) {
+      console.error(err);
+      res.status(500).json({ success: false, message: "Server error" });
+    }
+  }
+
+  // Put /updateProduct
+  async updateProduct(req, res) {
+    const { id } = req.params;
+    const productUpdates = req.body;
+    try {
+      const product = await Product.findOne({ pro_code: id });
+
+      if (!product) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Product not found" });
+      }
+
+      Object.keys(productUpdates).forEach((key) => {
+        product[key] = productUpdates[key];
+      });
+
+      await product.save();
+
+      res.json({ success: true, message: "Product updated", product });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ success: false, message: "Server error" });
+    }
+  }
 }
 
 module.exports = new ProductController();

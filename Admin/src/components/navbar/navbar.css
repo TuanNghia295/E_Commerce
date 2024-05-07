@@ -11,6 +11,11 @@
 .nav-profile{
     width: 25px;
     height: 50px;
+    cursor: pointer;
+}
+
+.nav-profile:hover{
+    transform: scale(1.2);
 }
 
 @media (max-width:1280px) {

@@ -13,18 +13,16 @@ const Products = () => {
 
   useEffect(() => {
     async function getProduct() {
-        const foundProduct = await all_product.find(
-            (e) => e.pro_code === productId
-        );
-        if (foundProduct) {
-            setProduct(foundProduct);
-        }
+      const foundProduct = await all_product.find(
+        (e) => e.pro_code === productId
+      );
+      if (foundProduct) {
+        setProduct(foundProduct);
+      }
     }
 
     getProduct();
-}, [all_product, productId]);
-
-
+  }, [all_product, productId]);
 
 
   // Kiểm tra xem dữ liệu đã được tải xong chưa
@@ -39,7 +37,7 @@ const Products = () => {
           <Breadcrumbs product={product}></Breadcrumbs>
           <ProductDisplay product={product}></ProductDisplay>
           <DescriptionBox></DescriptionBox>
-          <RelatedProducts></RelatedProducts>
+          <RelatedProducts ></RelatedProducts>
         </>
       ) : (
         <p>Product not found</p>

@@ -4,6 +4,7 @@ import { useContext, useEffect, useState } from "react";
 import { ShopContext } from "../../context/ShopContext";
 import remove_icon from "../assets/Ecommerce_Frontend_Assets/Assets/cart_cross_icon.png";
 import { PayPalButton } from "react-paypal-button-v2";
+import { useNavigate } from "react-router-dom";
 const cx = classNames.bind(styles);
 const CartItems = () => {
   const {
@@ -20,9 +21,13 @@ const CartItems = () => {
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [sdkReady, setSdkReady] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState(null);
+  const navigate = useNavigate();
+
   const toggleModal = () => {
     if (!paymentMethod) {
       alert("Please select a payment method before ordering.");
+    } else if (!cartItems || cartItems.length === 0) {
+      alert("Your cart is empty. Please add items before ordering.");
     } else {
       setIsModalOpen(!isModalOpen);
     }
@@ -37,11 +42,10 @@ const CartItems = () => {
     if (cartItems === undefined) {
       setList(newList);
     } else {
-      // kiểm tra xem pro_code có trùng với ID không
-      // nếu trùng thì spread vào setList thông tin trong allProduct
       for (const i in cartItems) {
         const list = all_product.find(
-          (item) => item.pro_code === cartItems[i].ID
+          (item) =>
+            item.pro_code === cartItems[i].ID && item.size === cartItems[i].size
         );
         if (list) {
           newList.push(list);
@@ -49,6 +53,11 @@ const CartItems = () => {
       }
       setList(newList);
     }
+  }, [cartItems]);
+
+  useEffect(() => {
+    console.log("cartItems", cartItems);
+    console.log("lít", list);
   }, [cartItems]);
 
   //  hàm addPaypalScript
@@ -73,12 +82,23 @@ const CartItems = () => {
     }
   }, []);
 
-  const onSuccessPayPal = (details, data) => {
+  const onSuccessPayPal = async (details, data) => {
+    if (!cartItems || cartItems.length === 0) {
+      alert("Your cart is empty. Please add items before ordering.");
+      return;
+    }
+    console.log("detail,data", details, data);
     alert("Order successfully");
+    await removeAllFromCart();
+    navigate("/");
   };
 
   // hàm xử lý việc đặt hàng trả bằng tiền mặt
   const payByCash = async () => {
+    if (cartItems.length === 0) {
+      alert("Your cart is empty. Please add items before ordering.");
+      return;
+    }
     console.log("Cart", cartItems);
     const token = localStorage.getItem("authToken");
     if (token) {
@@ -96,7 +116,7 @@ const CartItems = () => {
         alert("Order successfully");
         setIsModalOpen(false);
         await removeAllFromCart();
-        window.location.href=("/");
+        navigate("/");
       }
     }
   };
@@ -106,89 +126,88 @@ const CartItems = () => {
       <div className={cx("cartItems-format-main")}>
         <p>Products</p>
         <p>Title</p>
+        <p>Size</p>
         <p>Price</p>
         <p>Quantity</p>
         <p>Total</p>
         <p>Remove</p>
       </div>
       <div>
-        {list.map((item, index) => {
-          if (cartItems.length > 0) {
-            return (
-              <div key={index}>
-                <hr />
-                <div
-                  className={cx("cartItems-format", {
-                    "cartItems-format-main": true,
-                  })}
-                >
-                  <img
-                    src={item.image.replace(";", "")}
-                    alt=""
-                    className={cx("cartIcon-product-icon")}
-                  />
-                  <p>{item.name}</p>
-                  <p>${item.new_price.toLocaleString()}</p>
-                  <button className={cx("cartItem-quantity")}>
-                    {cartItems.map((pro) => {
-                      if (pro.ID === item.pro_code) {
-                        return pro.quantity;
-                      }
+        {cartItems &&
+          cartItems.map((item, index) => {
+            if (cartItems.length > 0) {
+              const cartItem = cartItems.find(
+                (pro) => pro.ID === item.pro_code && pro.size === item.size
+              );
+              const quantity = cartItem ? cartItem.quantity : 0;
+              const total = cartItem
+                ? (cartItem.quantity * item.new_price).toLocaleString()
+                : 0;
+              return (
+                <div key={index}>
+                  <hr />
+                  <div
+                    className={cx("cartItems-format", {
+                      "cartItems-format-main": true,
                     })}
-                  </button>
-                  <p>
-                    $
-                    {cartItems.map((pro) => {
-                      if (pro.ID === item.pro_code) {
-                        return (pro.quantity * item.new_price).toLocaleString();
-                      }
-                    })}
-                  </p>
-                  <img
-                    src={remove_icon}
-                    onClick={toogleRemoveModal}
-                    // onClick={() =>
-                    alt=""
-                    className={cx("cartItems-remove-icon")}
-                  />
-                </div>
-                {isRemoveModalOpen && (
-                  <>
-                    <div
-                      className={cx("cartItems-modal-overlay")}
+                  >
+                    <img
+                      src={item.image.replace(";", "")}
+                      alt=""
+                      className={cx("cartIcon-product-icon")}
+                    />
+                    <p>{item.name}</p>
+                    <p>{item.size}</p>
+                    <p>${item.new_price.toLocaleString()}</p>
+                    <button className={cx("cartItem-quantity")}>
+                      {quantity}
+                    </button>
+                    <p>${total}</p>
+                    <img
+                      src={remove_icon}
                       onClick={toogleRemoveModal}
-                    ></div>
-                    <div className={cx("cartItems-modal")}>
-                      <h2>ARE YOU SURE ?</h2>
-                      <div className={cx("cartItems-modal-box")}>
-                        <div className={cx("cartItems-modal-button")}>
-                          <div
-                            className={cx("buy-btn")}
-                            onClick={() => {
-                              removeFromCart(item.pro_code);
-                              toogleRemoveModal();
-                            }}
-                          >
-                            DELETE
+                      // onClick={() =>
+                      alt=""
+                      className={cx("cartItems-remove-icon")}
+                    />
+                  </div>
+                  {isRemoveModalOpen && (
+                    <>
+                      <div
+                        className={cx("cartItems-modal-overlay")}
+                        onClick={toogleRemoveModal}
+                      ></div>
+                      <div className={cx("cartItems-modal")}>
+                        <h2>ARE YOU SURE ?</h2>
+                        <div className={cx("cartItems-modal-box")}>
+                          <div className={cx("cartItems-modal-button")}>
+                            <div
+                              className={cx("buy-btn")}
+                              onClick={() => {
+                                removeFromCart(item.pro_code);
+                                toogleRemoveModal();
+                              }}
+                            >
+                              DELETE
+                            </div>
                           </div>
-                        </div>
-                        <div className={cx("cartItems-modal-button")}>
-                          <div
-                            className={cx("cancel-btn")}
-                            onClick={toogleRemoveModal}
-                          >
-                            CANCEL
+                          <div className={cx("cartItems-modal-button")}>
+                            <div
+                              className={cx("cancel-btn")}
+                              onClick={toogleRemoveModal}
+                            >
+                              CANCEL
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          }
-          return null;
-        })}
+                    </>
+                  )}
+                </div>
+              );
+            }
+            return null;
+          })}
         <div className={cx("cartItems-down")}>
           {user ? (
             <div className={cx("cartItems-total")}>
@@ -240,6 +259,8 @@ const CartItems = () => {
                       setPaymentMethod("Pay on Delivery");
                     }}
                   />
+                  <label htmlFor="payOnDelivery">Pay On Delivery</label>
+
                   <input
                     className={cx("payment-options-btn")}
                     type="radio"

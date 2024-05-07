@@ -62,7 +62,7 @@ const ShopContextProvider = (props) => {
     userData();
   }, []);
 
-  const addToCart = async (itemID) => {
+  const addToCart = async (itemID, size) => {
     if (localStorage.getItem("authToken")) {
       await fetch("http://localhost:2905/cart/addtocart", {
         method: "POST",
@@ -71,19 +71,18 @@ const ShopContextProvider = (props) => {
           Authorization: `${localStorage.getItem("authToken")}`,
           "Content-type": "application/json",
         },
-        body: JSON.stringify({ itemID: itemID }),
+        body: JSON.stringify({ itemID: itemID, size }),
       })
         .then((response) => response.json())
         .then((data) => {
           // console.log(data);
           if (data.success && data.existed) {
             const update = data.update;
-            const findItems = cartItems.map((item) => {
-              if (item.ID === update.ID) {
-                item.quantity = update.quantity;
-              }
-              return item;
-            });
+            const findItems = cartItems.map((item) =>
+              item.ID === update.ID && item.size === update.size
+                ? { ...item, quantity: update.quantity }
+                : item
+            );
             setCartItems(findItems);
           } else if (data.success && !data.existed) {
             if (!cartItems) {
@@ -141,7 +140,7 @@ const ShopContextProvider = (props) => {
     );
 
     const data = await response.json();
-    console.log("removed", data);
+    setCartItems(data.newCart);
   };
 
   const getTotalCartAmount = () => {

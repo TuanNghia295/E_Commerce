@@ -1,4 +1,5 @@
 import AddProduct from '../../components/addProduct/AddProduct'
+import EditProduct from '../../components/editProduct/editProduct'
 import ListProduct from '../../components/listProduct/ListProduct'
 import Sidebar from '../../components/sidebar/Sidebar'
 import './admin.css'
@@ -10,6 +11,7 @@ const Admin = () => {
       <Routes>
         <Route path='/addProduct' element={<AddProduct/>}></Route>
         <Route path='/listProduct' element={<ListProduct/>}></Route>
+        <Route path='/editProduct/:id' element={<EditProduct/>}></Route>
       </Routes>
     </div>
   )

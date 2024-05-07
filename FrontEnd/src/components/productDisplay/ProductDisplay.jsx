@@ -13,10 +13,21 @@ const ProductDisplay = ({ product }) => {
   const productImage = product.image.replace(";", "");
   const [toogleLogin, setToogleLogin] = useState(false);
   const [timeoutId, setTimeoutId] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
+
+  // hàm kiểm soát sizez sản phẩm
+  const handleSizeClick = (e) => {
+    setSelectedSize(e);
+  };
+
   // hàm kiểm soát trạng thái thêm sản phẩm
   const handleAddToCart = (pro_code) => {
+    if (!selectedSize) {
+      alert("Please select a size before adding to cart");
+      return;
+    }
     if (localStorage.getItem("authToken")) {
-      addToCart(pro_code);
+      addToCart(pro_code, selectedSize);
       setIsAddedToCart(true);
       const id = setTimeout(() => {
         setIsAddedToCart(false);
@@ -85,11 +96,22 @@ const ProductDisplay = ({ product }) => {
         <div className={cx("productDisplay-right-size")}>
           <h1>Select Size</h1>
           <div className={cx("productDisplay-right-sizes")}>
-            <div>S</div>
-            <div>M</div>
-            <div>L</div>
-            <div>XL</div>
-            <div>XXL</div>
+            {product.size.map((size, index) => {
+              // Kiểm tra nếu size chứa dấu phẩy
+              if (size.includes(",")) {
+                // Tách size thành một mảng các chuỗi con và bỏ dấu phẩy
+                size = size.split(",").join("");
+              }
+              return (
+                <div
+                  key={index}
+                  className={cx({ selected: size === selectedSize })}
+                  onClick={() => handleSizeClick(size)}
+                >
+                  {size}
+                </div>
+              );
+            })}
           </div>
           <button onClick={() => handleAddToCart(product.pro_code)}>
             ADD TO CART
