@@ -16,17 +16,16 @@ require("./config/passport");
 let port = 2905;
 
 app.use(express.json());
-app.use(
-  cookieSession({
-    name: "session",
-    keys: [process.env.PRIVATE_KEY_SESSION],
-    maxAge: 24 * 60 * 60 * 100,
-  })
-);
 app.use(cookieParser());
 
-passport.initialize();
-passport.session();
+
+app.use(
+  session({
+    secret:  process.env.PRIVATE_KEY_SESSION,
+    resave: false,
+    saveUninitialized: true,
+  })
+);
 
 const whiteList = [process.env.URL_CLIENT.split(",").map((url) => url.trim())];
 app.use(
@@ -260,13 +259,10 @@ app.post("/login", async (req, res) => {
 
 // creating for sign in, sign up by Facebook, Google
 // session config to use passport
-app.use(
-  session({
-    secret: "secretKeyCuaNghia",
-    resave: false,
-    saveUninitialized: true,
-  })
-);
+
+passport.initialize();
+passport.session();
+
 
 app.get("/userInfo", async (req, res) => {
   const token = req.headers.authorization.split(" ")[1];

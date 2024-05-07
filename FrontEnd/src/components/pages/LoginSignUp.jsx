@@ -118,7 +118,7 @@ const LoginSignUp = () => {
       }
     } catch (error) {
       console.error("An error occurred while signing up:", error);
-      alert("An error occurred while signing up. Please try again.");
+      alert("The email address is already in use by another account");
     }
   };
   const handleGoogleLogin = () => {

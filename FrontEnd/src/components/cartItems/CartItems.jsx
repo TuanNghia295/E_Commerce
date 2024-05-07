@@ -88,7 +88,6 @@ const CartItems = () => {
       return;
     }
     console.log("detail,data", details, data);
-    alert("Order successfully");
     await removeAllFromCart();
     navigate("/");
   };
