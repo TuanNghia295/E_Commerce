@@ -6,11 +6,13 @@ const db = require("./database_connection/index");
 const fb = require("./database_connection/firebase");
 const session = require("express-session");
 const router = require("./routes/authRouter");
-const cookieSession = require("cookie-session");
-const passport = require("passport");
+const passport = require("./config/passport");
 const routes = require("./routes");
 const admin = require("firebase-admin");
-var cookieParser = require("cookie-parser");
+const cookieParser = require("cookie-parser");
+const axios = require("axios");
+const authMiddleware = require("./middleWare/auth");
+
 require("dotenv").config();
 require("./config/passport");
 let port = 2905;
@@ -18,10 +20,13 @@ let port = 2905;
 app.use(express.json());
 app.use(cookieParser());
 
+// Khởi tạo passport và session
+passport.initialize();
+passport.session();
 
 app.use(
   session({
-    secret:  process.env.PRIVATE_KEY_SESSION,
+    secret: process.env.PRIVATE_KEY_SESSION,
     resave: false,
     saveUninitialized: true,
   })
@@ -46,7 +51,50 @@ const username = "tuannghiait2905";
 const password = "panda2905";
 db.Connect(username, password);
 
-// API creation
+// START API OAUTH
+app.get("/refresh-token", authMiddleware, async (req, res) => {
+  // Kiểm tra req được xác thực hay không
+  if (req.isAuthenticated()) {
+    // Lấy ra id của user ở profile
+    const userId = req.user.profile.id;
+    // Lấy ra user trong database bằng userId
+    const userRef = fb.ref("users").child(userId);
+    // Đọc dữ liệu
+    const snapshot = await userRef.once("value");
+    // Lấy dữ liệu
+    const userData = snapshot.val();
+
+    // Kiểm tra xem userData có tồn tại hay không
+    if (userData) {
+      // sử dụng refresh token để lấy token mới từ google
+      const refreshToken = userData.refreshToken;
+
+      // cấu hình dữ liệu để chuẩn bị gửi tới google
+      const data = {
+        client_id: process.env.CLIENT_ID,
+        client_secret: process.env.CLIENT_SECRET,
+        refresh_token: refreshToken,
+        grant_type: "refresh_token",
+      };
+
+      // POST đến google để lấy được accessToken mới
+      const response = axios.post("https://oauth2.googleapis.com/token", data);
+      const new_accessToken = response.access_token;
+
+      // Cập nhật accessToken mới vào database
+      await userRef.update({ accessToken: new_accessToken });
+
+      // Tạo JWT mới
+      const newToken = jwt.sign(
+        { id: userId, email: userData.email },
+        process.env.PRIVATE_KEY_SESSION,
+        { expiresIn: "1h" }
+      );
+      res.json({ success: true, token: newToken });
+    }
+  }
+});
+// END
 
 app.get("/", (req, res) => {
   res.send("Express App is running");
@@ -256,13 +304,6 @@ app.post("/login", async (req, res) => {
     });
   }
 });
-
-// creating for sign in, sign up by Facebook, Google
-// session config to use passport
-
-passport.initialize();
-passport.session();
-
 
 app.get("/userInfo", async (req, res) => {
   const token = req.headers.authorization.split(" ")[1];

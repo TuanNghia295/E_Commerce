@@ -1,65 +1,94 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-require("dotenv").config();
 const fb = require("../database_connection/firebase");
-// Serialize user into the session
-passport.serializeUser(function (user, done) {
-  done(null, user.id);
-});
+const User = fb.ref("users");
+const jwt = require("jsonwebtoken");
+const admin = require("firebase-admin");
+require("dotenv").config();
 
-// Deserialize user from the session
-passport.deserializeUser(function (id, done) {
-  fb.ref("users")
-    .orderByChild("id")
-    .equalTo(id)
-    .once("value", function (snapshot) {
-      if (snapshot.exists()) {
-        const userData = snapshot.val();
-        const userKey = Object.keys(userData)[0];
-        done(null, userData[userKey]);
-      } else {
-        done(new Error("User not found: " + id));
-      }
-    });
-});
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.CLIENT_ID,
       clientSecret: process.env.CLIENT_SECRET,
-      callbackURL: "/auth/google/callback",
+      callbackURL: "http://localhost:2905/auth/google/callback",
+      scope: ["profile", "email", "openid"],
+      prompt: "consent",
     },
-    async function (accessToken, refreshToken, profile, done) {
+    async function (accessToken, refreshToken, profile, cb) {
       try {
-        console.log(profile);
-        const response = await fb
-          .ref("users")
-          .orderByChild("email")
-          .equalTo(profile.emails[0].value)
-          .once("value");
-        const userRef = fb.ref("users");
-        if (!response.exists()) {
-          await userRef.push({
-            id: profile.id,
-            email: profile.emails[0].value,
+        const email =
+          profile.emails && profile.emails.length > 0
+            ? profile.emails[0].value
+            : null;
+        if (!email) {
+          return cb(new Error("No email found"), null);
+        }
+
+        const userRef = User.child(profile.id);
+        const snapshot = await userRef.once("value");
+        const existingUser = snapshot.val();
+
+        if (existingUser) {
+          // Update user
+          await userRef.update({
             displayName: profile.displayName,
-            typeLogin: profile.provider,
+            email: email,
+            photo:
+              profile.photos && profile.photos.length > 0
+                ? profile.photos[0].value
+                : null,
+            provider: profile.provider,
+            accessToken,
+            refreshToken: refreshToken ? refreshToken : null,
           });
         } else {
-          // Update user information if needed
-          const userKey = Object.keys(response.val())[0];
-          await userRef.child(userKey).update({
+          // Create account in Authentication firebase
+          admin.auth().createUser({
+            uid: profile.id,
+            email: profile.emails[0].value,
+          });
+
+          // Create new user
+          await userRef.set({
+            id: profile.id,
             displayName: profile.displayName,
-            typeLogin: profile.provider,
+            email: email,
+            photo:
+              profile.photos && profile.photos.length > 0
+                ? profile.photos[0].value
+                : null,
+            provider: profile.provider,
+            accessToken,
+            refreshToken: refreshToken ? refreshToken : null,
           });
         }
-        return done(null, profile);
+
+        // Create JWT token
+        const token = jwt.sign(
+          { id: profile.id, email: email, displayName: profile.displayName },
+          process.env.PRIVATE_KEY_SESSION,
+          {
+            expiresIn: "1h",
+          }
+        );
+
+        return cb(null, { profile, token });
       } catch (error) {
-        console.error(error);
-        return done(error);
+        return cb(error, null);
       }
     }
   )
 );
+
+// Serialize user to save into session
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+
+// Deserialize user from session
+passport.deserializeUser((obj, done) => {
+  done(null, obj);
+});
 
 module.exports = passport;

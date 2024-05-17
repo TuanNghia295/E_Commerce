@@ -13,14 +13,30 @@ import kid_banner from "./components/assets/Ecommerce_Frontend_Assets/Assets/ban
 import { useContext, useEffect } from "react";
 import { ShopContext } from "./context/ShopContext";
 import Profile from "./components/profile/Profile.jsx";
-
+import Cookies from 
 function App() {
-  const { tokenExpired } = useContext(ShopContext);
+  const { tokenExpired, user } = useContext(ShopContext);
   useEffect(() => {
     if (tokenExpired) {
       localStorage.removeItem("authToken");
     }
   }, [tokenExpired]);
+
+  useEffect(() => {
+    const getUserInfo = async () => {
+      const authToken = Cookies.get('authToken');
+      const response = await fetch("http://localhost:2905/userInfo", {
+        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+      const data = await response.json();
+      console.log("data", data);
+    };
+    getUserInfo();
+  }, [user]);
+
   return (
     <div>
       <BrowserRouter>
@@ -48,7 +64,7 @@ function App() {
             element={tokenExpired ? <Navigate to={"/login"} /> : <Cart />}
           ></Route>
           <Route path="/login" element={<LoginSignUp />}></Route>
-          <Route path="/profile" element={<Profile/>}></Route>
+          <Route path="/profile" element={<Profile />}></Route>
         </Routes>
         <Footer />
       </BrowserRouter>

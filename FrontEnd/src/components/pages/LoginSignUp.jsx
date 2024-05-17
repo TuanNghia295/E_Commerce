@@ -121,9 +121,13 @@ const LoginSignUp = () => {
       alert("The email address is already in use by another account");
     }
   };
+
+
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:2905/auth/google";
+    document.location.href = "http://localhost:2905/auth/google";
   };
+
+
   return (
     <div className={cx("loginSingup")}>
       <div className={cx("loginSignup-container")}>
